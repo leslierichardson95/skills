@@ -26,7 +26,7 @@ A solution with four projects where two packages appear at different versions ac
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="System.Text.Json" Version="10.0.1" />
-    <PackageReference Include="AutoMapper" Version="13.0.1" />
+    <PackageReference Include="Azure.Identity" Version="1.13.2" />
   </ItemGroup>
 </Project>
 ```
@@ -40,7 +40,7 @@ A solution with four projects where two packages appear at different versions ac
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="System.Text.Json" Version="8.0.4" />
-    <PackageReference Include="Serilog" Version="3.1.1" />
+    <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.15.0" />
   </ItemGroup>
 </Project>
 ```
@@ -54,7 +54,7 @@ A solution with four projects where two packages appear at different versions ac
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="System.Text.Json" Version="10.0.1" />
-    <PackageReference Include="AutoMapper" Version="12.0.1" />
+    <PackageReference Include="Azure.Identity" Version="1.10.0" />
   </ItemGroup>
 </Project>
 ```
@@ -76,7 +76,7 @@ A solution with four projects where two packages appear at different versions ac
 Key conflicts:
 
 - **System.Text.Json**: 10.0.1 in Api, Shared, Tests vs. 8.0.4 in Worker (8.0.4 has a known security advisory — CVE-2024-43485)
-- **AutoMapper**: 13.0.1 in Api vs. 12.0.1 in Shared (major version difference)
+- **Azure.Identity**: 1.13.2 in Api vs. 1.10.0 in Shared (minor version difference, but Shared may depend on older Azure SDK behavior)
 
 ## Input prompt
 

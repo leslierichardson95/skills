@@ -34,8 +34,8 @@ Tests/Tests.csproj
 $ grep -rn "PackageReference" --include="*.csproj" .
 
 ```
-./Web/Web.csproj:7:    <PackageReference Include="Serilog.AspNetCore" Version="8.0.3" />
-./Web/Web.csproj:8:    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.9.0" />
+./Web/Web.csproj:7:    <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.15.0" />
+./Web/Web.csproj:8:    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.24" />
 ./Core/Core.csproj:7:    <PackageReference Include="System.Text.Json" Version="9.0.0" />
 ./Tests/Tests.csproj:7:    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
 ./Tests/Tests.csproj:8:    <PackageReference Include="xunit" Version="2.9.3" />
@@ -57,11 +57,38 @@ Created file ./Directory.Packages.props
 
 ---
 
-<sub>⏱️ 24s</sub>
+<sub>⏱️ 20s</sub>
+
+### ✅ `edit`
+
+**Remove Version attributes from all project files**
+
+Web/Web.csproj, Core/Core.csproj, Tests/Tests.csproj updated.
+
+---
+
+<sub>⏱️ 26s</sub>
+
+### ✅ `bash`
+
+**Restore and build**
+
+$ dotnet restore MyApp.sln && dotnet build MyApp.sln
+
+```
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+<exited with exit code 0>
+```
+
+---
+
+<sub>⏱️ 34s</sub>
 
 ### 💬 Copilot
 
-I created `Directory.Packages.props` with all 6 packages and removed the `Version` attributes from the project files. The `PrivateAssets="all"` on `xunit.runner.visualstudio` was preserved. Build succeeds.
+Done! I created `Directory.Packages.props` with all 6 packages and removed the `Version` attributes from the project files. The `PrivateAssets="all"` on `xunit.runner.visualstudio` was preserved. Build succeeds.
 
 ---
 

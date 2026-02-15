@@ -50,6 +50,23 @@ Tests/Tests.csproj
 
 ### ✅ `bash`
 
+**Establish baseline build and capture package snapshot**
+
+$ dotnet clean && dotnet build -bl:baseline.binlog && dotnet list package --format json > baseline-packages.json
+
+```
+Build succeeded.
+    2 Warning(s)
+    0 Error(s)
+<exited with exit code 0>
+```
+
+---
+
+<sub>⏱️ 45s</sub>
+
+### ✅ `bash`
+
 **Check for existing CPM**
 
 $ find . -name "Directory.Packages.props" -type f
@@ -70,11 +87,11 @@ $ grep -rn "PackageReference\|PackageVersion" --include="*.csproj" --include="*.
 
 ```
 ./Api/Api.csproj:7:    <PackageReference Include="System.Text.Json" Version="10.0.1" />
-./Api/Api.csproj:8:    <PackageReference Include="AutoMapper" Version="13.0.1" />
+./Api/Api.csproj:8:    <PackageReference Include="Azure.Identity" Version="1.13.2" />
 ./Worker/Worker.csproj:7:    <PackageReference Include="System.Text.Json" Version="8.0.4" />
-./Worker/Worker.csproj:8:    <PackageReference Include="Serilog" Version="3.1.1" />
+./Worker/Worker.csproj:8:    <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.15.0" />
 ./Shared/Shared.csproj:7:    <PackageReference Include="System.Text.Json" Version="10.0.1" />
-./Shared/Shared.csproj:8:    <PackageReference Include="AutoMapper" Version="12.0.1" />
+./Shared/Shared.csproj:8:    <PackageReference Include="Azure.Identity" Version="1.10.0" />
 ./Tests/Tests.csproj:7:    <PackageReference Include="xunit" Version="2.9.3" />
 ./Tests/Tests.csproj:8:    <PackageReference Include="System.Text.Json" Version="10.0.1" />
 <exited with exit code 0>
@@ -91,8 +108,8 @@ $ grep -rn "PackageReference\|PackageVersion" --include="*.csproj" --include="*.
 | Package | Versions Found | Projects |
 |---------|---------------|----------|
 | System.Text.Json | **10.0.1** (Api, Shared, Tests), **8.0.4** (Worker) | 4 projects |
-| AutoMapper | **13.0.1** (Api), **12.0.1** (Shared) | 2 projects |
-| Serilog | 3.1.1 | 1 project |
+| Azure.Identity | **1.13.2** (Api), **1.10.0** (Shared) | 2 projects |
+| OpenTelemetry.Extensions.Hosting | 1.15.0 | 1 project |
 | xunit | 2.9.3 | 1 project |
 
 **⚠️ Two version conflicts require your input:**
@@ -101,9 +118,9 @@ $ grep -rn "PackageReference\|PackageVersion" --include="*.csproj" --include="*.
    - Use **10.0.1** for all projects (recommended — also resolves the security advisory), or
    - Keep **8.0.4** for Worker via `VersionOverride`? (Not recommended due to the advisory — at minimum upgrade to 8.0.5)
 
-2. **AutoMapper** — 13.0.1 vs. 12.0.1 (major version difference). Should I:
-   - Use **13.0.1** for all projects (recommended), or
-   - Keep **12.0.1** for Shared via `VersionOverride`?
+2. **Azure.Identity** — 1.13.2 vs. 1.10.0 (minor version difference). Should I:
+   - Use **1.13.2** for all projects (recommended), or
+   - Keep **1.10.0** for Shared via `VersionOverride`?
 
 ---
 
@@ -111,7 +128,7 @@ $ grep -rn "PackageReference\|PackageVersion" --include="*.csproj" --include="*.
 
 ### 👤 User
 
-Use 10.0.1 for System.Text.Json everywhere. For AutoMapper, keep 12.0.1 for Shared using VersionOverride since it targets an older API.
+Use 10.0.1 for System.Text.Json everywhere. For Azure.Identity, keep 1.10.0 for Shared using VersionOverride since it targets an older Azure SDK.
 
 ---
 
@@ -135,9 +152,9 @@ The file contents:
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="AutoMapper" Version="13.0.1" />
+    <PackageVersion Include="Azure.Identity" Version="1.13.2" />
     <PackageVersion Include="System.Text.Json" Version="10.0.1" />
-    <PackageVersion Include="Serilog" Version="3.1.1" />
+    <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.15.0" />
     <PackageVersion Include="xunit" Version="2.9.3" />
   </ItemGroup>
 </Project>
@@ -169,14 +186,14 @@ Worker/Worker.csproj — removed `Version` from both PackageReference items
 
 ### ✅ `edit`
 
-**Update Shared.csproj with VersionOverride for AutoMapper**
+**Update Shared.csproj with VersionOverride for Azure.Identity**
 
-Shared/Shared.csproj — removed `Version` from System.Text.Json; changed AutoMapper to `VersionOverride="12.0.1"`
+Shared/Shared.csproj — removed `Version` from System.Text.Json; changed Azure.Identity to `VersionOverride="1.10.0"`
 
 The updated PackageReference:
 
 ```xml
-<PackageReference Include="AutoMapper" VersionOverride="12.0.1" />
+<PackageReference Include="Azure.Identity" VersionOverride="1.10.0" />
 ```
 
 ---
@@ -211,9 +228,9 @@ $ dotnet restore Inventory.sln
 
 ### ✅ `bash`
 
-**Build solution**
+**Build solution and capture post-conversion snapshot**
 
-$ dotnet build Inventory.sln
+$ dotnet clean && dotnet build -bl:after-cpm.binlog && dotnet list package --format json > after-cpm-packages.json
 
 ```
 Build succeeded.
@@ -228,13 +245,31 @@ Build succeeded.
 
 ### 💬 Copilot
 
+**Package comparison (baseline → after CPM):**
+
+| Project | Package | Before | After | Status |
+|---------|---------|--------|-------|--------|
+| Api | Azure.Identity | 1.13.2 | 1.13.2 | Unchanged |
+| Api | System.Text.Json | 10.0.1 | 10.0.1 | Unchanged |
+| Shared | Azure.Identity | 1.10.0 | 1.10.0 | Via VersionOverride |
+| Shared | System.Text.Json | 10.0.1 | 10.0.1 | Unchanged |
+| Tests | System.Text.Json | 10.0.1 | 10.0.1 | Unchanged |
+| Tests | xunit | 2.9.3 | 2.9.3 | Unchanged |
+| Worker | OpenTelemetry.Extensions.Hosting | 1.15.0 | 1.15.0 | Unchanged |
+| Worker | System.Text.Json | 8.0.4 | 10.0.1 | ⚠️ Aligned (also resolves CVE-2024-43485) |
+
+**1 intentional version change:** Worker System.Text.Json 8.0.4 → 10.0.1 (version alignment, also resolves CVE-2024-43485).
+
 **Conversion complete.** Summary:
 
 - **4 projects** converted to Central Package Management
 - **4 packages** centralized in `Directory.Packages.props`
 - **System.Text.Json** aligned to **10.0.1** across all projects (also resolves CVE-2024-43485 for Worker)
-- **AutoMapper** set to **13.0.1** centrally; Shared uses `VersionOverride="12.0.1"` per your request
+- **Azure.Identity** set to **1.13.2** centrally; Shared uses `VersionOverride="1.10.0"` per your request
 - `dotnet restore` and `dotnet build` both succeeded
+- Package comparison confirms 1 intentional version change (System.Text.Json version alignment, also resolves CVE-2024-43485)
+
+The `baseline.binlog` and `after-cpm.binlog` files are available for manual inspection in the [MSBuild Structured Log Viewer](https://msbuildlog.com/). The `baseline-packages.json` and `after-cpm-packages.json` files contain the raw package lists used for comparison.
 
 I recommend running your tests to verify no behavioral changes:
 

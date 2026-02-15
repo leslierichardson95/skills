@@ -22,16 +22,16 @@ Data/Data.csproj
 
 <Project>
   <PropertyGroup>
-    <SerilogVersion>3.1.1</SerilogVersion>
-    <EFCoreVersion>8.0.11</EFCoreVersion>
+    <OTelVersion>1.15.0</OTelVersion>
+    <DIVersion>9.0.0</DIVersion>
     <OutputPath>$(MSBuildThisFileDirectory)artifacts\$(MSBuildProjectName)\</OutputPath>
   </PropertyGroup>
 </Project>
 
-./Api/Api.csproj:7:    <PackageReference Include="Serilog.AspNetCore" Version="$(SerilogVersion)" />
-./Api/Api.csproj:8:    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.9.0" />
-./Data/Data.csproj:7:    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="$(EFCoreVersion)" />
-./Data/Data.csproj:8:    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="$(EFCoreVersion)" />
+./Api/Api.csproj:7:    <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="$(OTelVersion)" />
+./Api/Api.csproj:8:    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.24" />
+./Data/Data.csproj:7:    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="$(DIVersion)" />
+./Data/Data.csproj:8:    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="$(DIVersion)" />
 <exited with exit code 0>
 ```
 
@@ -64,7 +64,7 @@ Created file ./Directory.Packages.props
 **Remove version properties from Directory.Build.props**
 
 ```
-Removed SerilogVersion and EFCoreVersion properties
+Removed OTelVersion and DIVersion properties
 ```
 
 ---

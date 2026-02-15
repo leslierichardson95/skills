@@ -27,8 +27,9 @@ A repository with a solution containing five projects that combines multiple CPM
 <Project>
   <PropertyGroup>
     <LangVersion>latest</LangVersion>
-    <EFCoreVersion>8.0.11</EFCoreVersion>
-    <InternalLibVersion>3.2.0</InternalLibVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <BlobsVersion>12.24.0</BlobsVersion>
+    <HostingVersion>8.0.1</HostingVersion>
   </PropertyGroup>
   <Import Project="Common.props" />
 </Project>
@@ -53,7 +54,7 @@ A repository with a solution containing five projects that combines multiple CPM
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="System.Text.Json" Version="10.0.1" />
-    <PackageReference Include="Serilog.AspNetCore" Version="8.0.3" />
+    <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.15.0" />
   </ItemGroup>
 </Project>
 ```
@@ -67,7 +68,7 @@ A repository with a solution containing five projects that combines multiple CPM
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="System.Text.Json" Version="10.0.1" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="$(EFCoreVersion)" />
+    <PackageReference Include="Azure.Storage.Blobs" Version="$(BlobsVersion)" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
     <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="6.0.36" />
@@ -87,7 +88,7 @@ A repository with a solution containing five projects that combines multiple CPM
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="System.Text.Json" Version="9.0.0" />
-    <PackageReference Include="Contoso.InternalLib" Version="$(InternalLibVersion)" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="$(HostingVersion)" />
   </ItemGroup>
 </Project>
 ```
@@ -101,7 +102,7 @@ A repository with a solution containing five projects that combines multiple CPM
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="System.Text.Json" Version="8.0.4" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.36" />
+    <PackageReference Include="Azure.Storage.Blobs" Version="12.19.0" />
   </ItemGroup>
 </Project>
 ```
@@ -123,8 +124,8 @@ A repository with a solution containing five projects that combines multiple CPM
 ## Complexities present
 
 1. **Version conflicts (System.Text.Json)**: 10.0.1 in Web/Api/Tests, 9.0.0 in Core, 8.0.4 in Legacy — three different major versions, and 8.0.4 has a known security advisory (CVE-2024-43485)
-2. **Version conflicts (EntityFrameworkCore)**: `$(EFCoreVersion)` → 8.0.11 in Api, literal 6.0.36 in Legacy — major version difference
-3. **MSBuild properties**: `$(EFCoreVersion)` and `$(InternalLibVersion)` in `Directory.Build.props`
+2. **Version conflicts (Azure.Storage.Blobs)**: `$(BlobsVersion)` → 12.24.0 in Api, literal 12.19.0 in Legacy — minor version difference
+3. **MSBuild properties**: `$(BlobsVersion)` and `$(HostingVersion)` in `Directory.Build.props`
 4. **Conditional PackageReference**: `Microsoft.AspNetCore.Mvc.NewtonsoftJson` uses target framework conditions in Api.csproj with different versions per TFM
 5. **Shared .props file**: `Common.props` contains a `PackageReference` for `Microsoft.Extensions.Logging` that applies to all projects
 6. **Non-version property**: `$(LangVersion)` in `Directory.Build.props` must not be removed
@@ -139,7 +140,7 @@ I need to convert this entire repository to Central Package Management. The solu
 - Presents a comprehensive summary showing all 6 complexities
 - Asks the user about each decision point separately:
   - How to resolve the three-way System.Text.Json conflict (including the security advisory on 8.0.4)
-  - How to handle the EntityFrameworkCore version mismatch (property vs. literal, different versions)
+  - How to handle the Azure.Storage.Blobs version mismatch (property vs. literal, different versions)
   - Whether to inline or keep each MSBuild property
   - How to handle the conditional PackageReference (conditional `PackageVersion` vs. `VersionOverride`)
   - How to handle the PackageReference in `Common.props`

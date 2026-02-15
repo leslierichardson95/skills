@@ -70,13 +70,13 @@ Compare the baseline and post-conversion package lists per project. For each pro
 Present all packages with differences first:
 
 ```
-| Project        | Package                  | Baseline  | After CPM | Change              |
-|----------------|--------------------------|-----------|-----------|---------------------|
-| Legacy.csproj  | System.Text.Json         | 8.0.4     | 8.0.5     | ⬆️ Security fix      |
-| Core.csproj    | System.Text.Json         | 9.0.0     | 9.0.0     | VersionOverride     |
-| Shared.csproj  | AutoMapper               | 12.0.1    | 12.0.1    | VersionOverride     |
-| Api.csproj     | SomePackage              | 2.0.0     | —         | ❌ Removed           |
-| Api.csproj     | NewPackage               | —         | 1.0.0     | ➕ Added             |
+| Project | Package | Baseline | After CPM | Change |
+|---------|---------|----------|-----------|--------|
+| Legacy.csproj | System.Text.Json | 8.0.4 | 8.0.5 | ⚠️ Security fix (CVE-2024-43485) |
+| Core.csproj | System.Text.Json | 9.0.0 | 9.0.0 | VersionOverride |
+| Shared.csproj | Azure.Identity | 1.10.0 | 1.10.0 | VersionOverride |
+| Api.csproj | SomePackage | 2.0.0 | — | ❌ Removed |
+| Api.csproj | NewPackage | — | 1.0.0 | ➕ Added |
 ```
 
 ### Unchanged packages table
@@ -84,14 +84,14 @@ Present all packages with differences first:
 Then present all packages that resolved to the same version, confirming version-neutral conversion:
 
 ```
-| Project        | Package                          | Version   |
-|----------------|----------------------------------|-----------|
-| Api.csproj     | System.Text.Json                 | 10.0.1    |
-| Api.csproj     | Microsoft.EntityFrameworkCore    | 8.0.11    |
-| Web.csproj     | System.Text.Json                 | 10.0.1    |
-| Web.csproj     | Serilog.AspNetCore               | 8.0.3     |
-| Tests.csproj   | xunit                            | 2.9.3     |
-| Tests.csproj   | System.Text.Json                 | 10.0.1    |
+| Project | Package | Version |
+|---------|---------|---------|
+| Api.csproj | System.Text.Json | 10.0.1 |
+| Api.csproj | Azure.Storage.Blobs | 12.24.0 |
+| Web.csproj | System.Text.Json | 10.0.1 |
+| Web.csproj | OpenTelemetry.Extensions.Hosting | 1.15.0 |
+| Tests.csproj | xunit | 2.9.3 |
+| Tests.csproj | System.Text.Json | 10.0.1 |
 ```
 
 If there are no changes at all, state that the conversion is fully version-neutral.

@@ -49,6 +49,23 @@ Tests/Tests.csproj
 
 ### ✅ `bash`
 
+**Establish baseline build and capture package snapshot**
+
+$ dotnet clean && dotnet build -bl:baseline.binlog && dotnet list package --format json > baseline-packages.json
+
+```
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+<exited with exit code 0>
+```
+
+---
+
+<sub>⏱️ 42s</sub>
+
+### ✅ `bash`
+
 **Check for existing CPM configuration**
 
 $ find . -name "Directory.Packages.props" -type f
@@ -68,8 +85,8 @@ $ find . -name "Directory.Packages.props" -type f
 $ grep -rn "PackageReference\|PackageVersion" --include="*.csproj" --include="*.props" --include="*.targets" .
 
 ```
-./Web/Web.csproj:7:    <PackageReference Include="Serilog.AspNetCore" Version="8.0.3" />
-./Web/Web.csproj:8:    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.9.0" />
+./Web/Web.csproj:7:    <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.15.0" />
+./Web/Web.csproj:8:    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.24" />
 ./Core/Core.csproj:7:    <PackageReference Include="System.Text.Json" Version="9.0.0" />
 ./Tests/Tests.csproj:7:    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
 ./Tests/Tests.csproj:8:    <PackageReference Include="xunit" Version="2.9.3" />
@@ -88,8 +105,8 @@ $ grep -rn "PackageReference\|PackageVersion" --include="*.csproj" --include="*.
 | Package | Version | Projects |
 |---------|---------|----------|
 | Microsoft.NET.Test.Sdk | 17.12.0 | Tests |
-| Serilog.AspNetCore | 8.0.3 | Web |
-| Swashbuckle.AspNetCore | 6.9.0 | Web |
+| OpenTelemetry.Extensions.Hosting | 1.15.0 | Web |
+| Microsoft.AspNetCore.OpenApi | 8.0.24 | Web |
 | System.Text.Json | 9.0.0 | Core |
 | xunit | 2.9.3 | Tests |
 | xunit.runner.visualstudio | 2.8.2 | Tests |
@@ -125,8 +142,8 @@ The file contents:
   <ItemGroup>
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
     <PackageVersion Include="System.Text.Json" Version="9.0.0" />
-    <PackageVersion Include="Serilog.AspNetCore" Version="8.0.3" />
-    <PackageVersion Include="Swashbuckle.AspNetCore" Version="6.9.0" />
+    <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.15.0" />
+    <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="8.0.24" />
     <PackageVersion Include="xunit" Version="2.9.3" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="2.8.2" />
   </ItemGroup>
@@ -141,7 +158,7 @@ The file contents:
 
 **Remove Version attributes from Web.csproj**
 
-Web/Web.csproj — removed `Version` from Serilog.AspNetCore and Swashbuckle.AspNetCore
+Web/Web.csproj — removed `Version` from OpenTelemetry.Extensions.Hosting and Microsoft.AspNetCore.OpenApi
 
 ---
 
@@ -185,9 +202,9 @@ $ dotnet restore MyApp.sln
 
 ### ✅ `bash`
 
-**Build solution**
+**Build solution and capture post-conversion snapshot**
 
-$ dotnet build MyApp.sln
+$ dotnet clean && dotnet build -bl:after-cpm.binlog && dotnet list package --format json > after-cpm-packages.json
 
 ```
 Build succeeded.
@@ -202,6 +219,19 @@ Build succeeded.
 
 ### 💬 Copilot
 
+**Package comparison (baseline → after CPM):**
+
+| Project | Package | Before | After | Status |
+|---------|---------|--------|-------|--------|
+| Web | OpenTelemetry.Extensions.Hosting | 1.15.0 | 1.15.0 | Unchanged |
+| Web | Microsoft.AspNetCore.OpenApi | 8.0.24 | 8.0.24 | Unchanged |
+| Core | System.Text.Json | 9.0.0 | 9.0.0 | Unchanged |
+| Tests | Microsoft.NET.Test.Sdk | 17.12.0 | 17.12.0 | Unchanged |
+| Tests | xunit | 2.9.3 | 2.9.3 | Unchanged |
+| Tests | xunit.runner.visualstudio | 2.8.2 | 2.8.2 | Unchanged |
+
+All resolved versions are identical — the conversion is version-neutral.
+
 **Conversion complete.** Summary:
 
 - **3 projects** converted to Central Package Management
@@ -209,6 +239,9 @@ Build succeeded.
 - `PrivateAssets="all"` preserved on `xunit.runner.visualstudio` in Tests.csproj
 - No version conflicts or special cases encountered
 - `dotnet restore` and `dotnet build` both succeeded
+- Package comparison confirms no version changes
+
+The `baseline.binlog` and `after-cpm.binlog` files are available for manual inspection in the [MSBuild Structured Log Viewer](https://msbuildlog.com/). The `baseline-packages.json` and `after-cpm-packages.json` files contain the raw package lists used for comparison.
 
 I recommend running your tests to verify no behavioral changes:
 

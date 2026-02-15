@@ -22,11 +22,11 @@ Worker/Worker.csproj
 Shared/Shared.csproj
 Tests/Tests.csproj
 ./Api/Api.csproj:7:    <PackageReference Include="System.Text.Json" Version="10.0.1" />
-./Api/Api.csproj:8:    <PackageReference Include="AutoMapper" Version="13.0.1" />
+./Api/Api.csproj:8:    <PackageReference Include="Azure.Identity" Version="1.13.2" />
 ./Worker/Worker.csproj:7:    <PackageReference Include="System.Text.Json" Version="8.0.4" />
-./Worker/Worker.csproj:8:    <PackageReference Include="Serilog" Version="3.1.1" />
+./Worker/Worker.csproj:8:    <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.15.0" />
 ./Shared/Shared.csproj:7:    <PackageReference Include="System.Text.Json" Version="10.0.1" />
-./Shared/Shared.csproj:8:    <PackageReference Include="AutoMapper" Version="12.0.1" />
+./Shared/Shared.csproj:8:    <PackageReference Include="Azure.Identity" Version="1.10.0" />
 ./Tests/Tests.csproj:7:    <PackageReference Include="xunit" Version="2.9.3" />
 ./Tests/Tests.csproj:8:    <PackageReference Include="System.Text.Json" Version="10.0.1" />
 <exited with exit code 0>
@@ -38,7 +38,7 @@ Tests/Tests.csproj
 
 ### 💬 Copilot
 
-I see System.Text.Json has two versions — 10.0.1 and 8.0.4. And AutoMapper also has two: 13.0.1 and 12.0.1. I'll pick the latest for both and create `Directory.Packages.props`.
+I see System.Text.Json has two versions — 10.0.1 and 8.0.4. And Azure.Identity also has two: 1.13.2 and 1.10.0. I'll pick the latest for both and create `Directory.Packages.props`.
 
 ---
 
@@ -58,7 +58,7 @@ Created file ./Directory.Packages.props
 
 ### 💬 Copilot
 
-Done! I used 10.0.1 for System.Text.Json and 13.0.1 for AutoMapper across all projects. Everything builds.
+Done! I used 10.0.1 for System.Text.Json and 1.13.2 for Azure.Identity across all projects. Everything builds.
 
 ---
 

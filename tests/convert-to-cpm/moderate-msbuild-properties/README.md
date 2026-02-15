@@ -19,8 +19,8 @@ A solution with two projects where package versions are defined via MSBuild prop
 ```xml
 <Project>
   <PropertyGroup>
-    <SerilogVersion>3.1.1</SerilogVersion>
-    <EFCoreVersion>8.0.11</EFCoreVersion>
+    <OTelVersion>1.15.0</OTelVersion>
+    <DIVersion>9.0.0</DIVersion>
     <OutputPath>$(MSBuildThisFileDirectory)artifacts\$(MSBuildProjectName)\</OutputPath>
   </PropertyGroup>
 </Project>
@@ -34,8 +34,8 @@ A solution with two projects where package versions are defined via MSBuild prop
     <TargetFramework>net8.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Serilog.AspNetCore" Version="$(SerilogVersion)" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.9.0" />
+    <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="$(OTelVersion)" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.24" />
   </ItemGroup>
 </Project>
 ```
@@ -48,16 +48,16 @@ A solution with two projects where package versions are defined via MSBuild prop
     <TargetFramework>net8.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="$(EFCoreVersion)" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="$(EFCoreVersion)" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="$(DIVersion)" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="$(DIVersion)" />
   </ItemGroup>
 </Project>
 ```
 
 Key complexity:
 
-- `$(SerilogVersion)` and `$(EFCoreVersion)` are defined in `Directory.Build.props` and used for `PackageReference` versions
-- `$(EFCoreVersion)` is used by two packages, so both must be handled together
+- `$(OTelVersion)` and `$(DIVersion)` are defined in `Directory.Build.props` and used for `PackageReference` versions
+- `$(DIVersion)` is used by two packages, so both must be handled together
 - `Directory.Build.props` also contains `$(OutputPath)` which is unrelated and must not be removed
 
 ## Input prompt

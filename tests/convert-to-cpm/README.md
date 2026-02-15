@@ -25,4 +25,8 @@ Conversions with multiple overlapping complexities. The agent must audit several
 
 - **[advanced-multi-complexity](advanced-multi-complexity/)** — Version conflicts, MSBuild properties, conditional PackageReference items, and references in shared .props files all in one repository
 
+## Generating test solutions
 
+Each scenario's `README.md` describes the file structure and project contents. The `src/` directories that contain buildable .NET solutions are git-ignored and must be generated locally. Use the following prompt to create them:
+
+> Read each scenario README under tests/convert-to-cpm/ and generate a buildable .NET solution into a `src/` folder within each scenario directory, matching the described project structure and package references. Verify each solution restores and builds successfully.

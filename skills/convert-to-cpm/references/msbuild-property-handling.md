@@ -1,6 +1,6 @@
 # MSBuild Property Handling
 
-This covers how to handle MSBuild properties that define package versions (e.g., `Version="$(EFCoreVersion)"`) during CPM conversion. This applies to workflow steps 7 (decisions) and 9 (cleanup).
+This covers how to handle MSBuild properties that define package versions (e.g., `Version="$(DIVersion)"` or `Version="$(BlobsVersion)"`) during CPM conversion. This applies to workflow steps 7 (decisions) and 9 (cleanup).
 
 ## Step 7: Make property decisions
 

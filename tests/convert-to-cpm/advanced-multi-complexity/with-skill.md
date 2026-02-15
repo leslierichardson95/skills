@@ -51,6 +51,23 @@ Tests/Tests.csproj
 
 ### ✅ `bash`
 
+**Establish baseline build and capture package snapshot**
+
+$ dotnet clean && dotnet build -bl:baseline.binlog && dotnet list package --format json > baseline-packages.json
+
+```
+Build succeeded.
+    5 Warning(s)
+    0 Error(s)
+<exited with exit code 0>
+```
+
+---
+
+<sub>⏱️ 50s</sub>
+
+### ✅ `bash`
+
 **Check for existing CPM**
 
 $ find . -name "Directory.Packages.props" -type f
@@ -71,15 +88,15 @@ $ grep -rn "PackageReference\|PackageVersion" --include="*.csproj" --include="*.
 
 ```
 ./Web/Web.csproj:7:    <PackageReference Include="System.Text.Json" Version="10.0.1" />
-./Web/Web.csproj:8:    <PackageReference Include="Serilog.AspNetCore" Version="8.0.3" />
+./Web/Web.csproj:8:    <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.15.0" />
 ./Api/Api.csproj:7:    <PackageReference Include="System.Text.Json" Version="10.0.1" />
-./Api/Api.csproj:8:    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="$(EFCoreVersion)" />
+./Api/Api.csproj:8:    <PackageReference Include="Azure.Storage.Blobs" Version="$(BlobsVersion)" />
 ./Api/Api.csproj:10:    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="6.0.36" />
 ./Api/Api.csproj:12:    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="8.0.11" />
 ./Core/Core.csproj:7:    <PackageReference Include="System.Text.Json" Version="9.0.0" />
-./Core/Core.csproj:8:    <PackageReference Include="Contoso.InternalLib" Version="$(InternalLibVersion)" />
+./Core/Core.csproj:8:    <PackageReference Include="Microsoft.Extensions.Hosting" Version="$(HostingVersion)" />
 ./Legacy/Legacy.csproj:7:    <PackageReference Include="System.Text.Json" Version="8.0.4" />
-./Legacy/Legacy.csproj:8:    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.36" />
+./Legacy/Legacy.csproj:8:    <PackageReference Include="Azure.Storage.Blobs" Version="12.19.0" />
 ./Tests/Tests.csproj:7:    <PackageReference Include="xunit" Version="2.9.3" />
 ./Tests/Tests.csproj:8:    <PackageReference Include="System.Text.Json" Version="10.0.1" />
 ./Common.props:3:    <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.0" />
@@ -87,8 +104,8 @@ $ grep -rn "PackageReference\|PackageVersion" --include="*.csproj" --include="*.
 <Project>
   <PropertyGroup>
     <LangVersion>latest</LangVersion>
-    <EFCoreVersion>8.0.11</EFCoreVersion>
-    <InternalLibVersion>3.2.0</InternalLibVersion>
+    <BlobsVersion>12.24.0</BlobsVersion>
+    <HostingVersion>8.0.1</HostingVersion>
   </PropertyGroup>
   <Import Project="Common.props" />
 </Project>
@@ -112,10 +129,10 @@ $ grep -rn "PackageReference\|PackageVersion" --include="*.csproj" --include="*.
 | Package | Versions | Source | Projects |
 |---------|----------|--------|----------|
 | System.Text.Json | **10.0.1**, **9.0.0**, **8.0.4** | Literals | Web, Api, Tests / Core / Legacy |
-| Serilog.AspNetCore | 8.0.3 | Literal | Web |
-| Microsoft.EntityFrameworkCore | `$(EFCoreVersion)` → **8.0.11**, **6.0.36** | Property + literal | Api / Legacy |
+| OpenTelemetry.Extensions.Hosting | 1.15.0 | Literal | Web |
+| Azure.Storage.Blobs | `$(BlobsVersion)` → **12.24.0**, **12.19.0** | Property + literal | Api / Legacy |
 | Microsoft.AspNetCore.Mvc.NewtonsoftJson | **6.0.36** (net6.0), **8.0.11** (net8.0) | Conditional | Api |
-| Contoso.InternalLib | `$(InternalLibVersion)` → **3.2.0** | Property | Core |
+| Microsoft.Extensions.Hosting | `$(HostingVersion)` → **8.0.1** | Property | Core |
 | Microsoft.Extensions.Logging | 9.0.0 | Literal in `Common.props` | All (via import) |
 | xunit | 2.9.3 | Literal | Tests |
 
@@ -130,20 +147,20 @@ Should I:
 - Align all to **10.0.1** (may require code changes in Legacy and Core), or
 - Use **10.0.1** centrally with `VersionOverride` for Core and/or Legacy? If keeping Legacy on 8.x, it should be at least **8.0.5** to resolve the advisory.
 
-**2. Version conflict — Microsoft.EntityFrameworkCore:**
-- Api uses `$(EFCoreVersion)` → 8.0.11
-- Legacy uses literal 6.0.36 (targets net6.0, cannot use 8.x)
+**2. Version conflict — Azure.Storage.Blobs:**
+- Api uses `$(BlobsVersion)` → 12.24.0
+- Legacy uses literal 12.19.0 (targets net6.0)
 
-I recommend using **8.0.11** centrally with `VersionOverride="6.0.36"` for Legacy, since Legacy targets net6.0. Does that work?
+I recommend using **12.24.0** centrally with `VersionOverride="12.19.0"` for Legacy, since Legacy targets net6.0. Does that work?
 
-**3. MSBuild property — `$(EFCoreVersion)` = 8.0.11:**
-Used only for EntityFrameworkCore versioning. Should I:
-- **Inline** 8.0.11 in `Directory.Packages.props` and remove the property, or
+**3. MSBuild property — `$(BlobsVersion)` = 12.24.0:**
+Used only for Azure.Storage.Blobs versioning. Should I:
+- **Inline** 12.24.0 in `Directory.Packages.props` and remove the property, or
 - **Keep** the property?
 
-**4. MSBuild property — `$(InternalLibVersion)` = 3.2.0:**
-Used for Contoso.InternalLib. Should I:
-- **Inline** 3.2.0 in `Directory.Packages.props` and remove the property, or
+**4. MSBuild property — `$(HostingVersion)` = 8.0.1:**
+Used for Microsoft.Extensions.Hosting. Should I:
+- **Inline** 8.0.1 in `Directory.Packages.props` and remove the property, or
 - **Keep** the property (useful if this version is updated frequently)?
 
 **5. Conditional PackageReference — Microsoft.AspNetCore.Mvc.NewtonsoftJson:**
@@ -195,13 +212,13 @@ The file contents:
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="Contoso.InternalLib" Version="$(InternalLibVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="$(HostingVersion)" />
     <PackageVersion Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="6.0.36" Condition="'$(TargetFramework)' == 'net6.0'" />
     <PackageVersion Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="8.0.11" Condition="'$(TargetFramework)' == 'net8.0'" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="8.0.11" />
+    <PackageVersion Include="Azure.Storage.Blobs" Version="12.24.0" />
     <PackageVersion Include="Microsoft.Extensions.Logging" Version="9.0.0" />
     <PackageVersion Include="System.Text.Json" Version="10.0.1" />
-    <PackageVersion Include="Serilog.AspNetCore" Version="8.0.3" />
+    <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.15.0" />
     <PackageVersion Include="xunit" Version="2.9.3" />
   </ItemGroup>
 </Project>
@@ -215,7 +232,7 @@ The file contents:
 
 **Remove Version from Web.csproj**
 
-Web/Web.csproj — removed `Version` from System.Text.Json and Serilog.AspNetCore
+Web/Web.csproj — removed `Version` from System.Text.Json and OpenTelemetry.Extensions.Hosting
 
 ---
 
@@ -225,7 +242,7 @@ Web/Web.csproj — removed `Version` from System.Text.Json and Serilog.AspNetCor
 
 **Update Api.csproj**
 
-Api/Api.csproj — removed `Version` from System.Text.Json, EntityFrameworkCore, and both conditional Mvc.NewtonsoftJson entries
+Api/Api.csproj — removed `Version` from System.Text.Json, Azure.Storage.Blobs, and both conditional Mvc.NewtonsoftJson entries
 
 ---
 
@@ -235,7 +252,7 @@ Api/Api.csproj — removed `Version` from System.Text.Json, EntityFrameworkCore,
 
 **Update Core.csproj with VersionOverride**
 
-Core/Core.csproj — changed System.Text.Json to `VersionOverride="9.0.0"`, removed `Version` from Contoso.InternalLib
+Core/Core.csproj — changed System.Text.Json to `VersionOverride="9.0.0"`, removed `Version` from Microsoft.Extensions.Hosting
 
 ---
 
@@ -245,7 +262,7 @@ Core/Core.csproj — changed System.Text.Json to `VersionOverride="9.0.0"`, remo
 
 **Update Legacy.csproj with VersionOverrides**
 
-Legacy/Legacy.csproj — changed System.Text.Json to `VersionOverride="8.0.5"` (bumped from 8.0.4 to fix CVE-2024-43485), changed EntityFrameworkCore to `VersionOverride="6.0.36"`
+Legacy/Legacy.csproj — changed System.Text.Json to `VersionOverride="8.0.5"` (bumped from 8.0.4 to fix CVE-2024-43485), changed Azure.Storage.Blobs to `VersionOverride="12.19.0"`
 
 ---
 
@@ -283,9 +300,9 @@ Updated `Common.props`:
 
 ### ✅ `edit`
 
-**Remove EFCoreVersion from Directory.Build.props**
+**Remove BlobsVersion from Directory.Build.props**
 
-Directory.Build.props — removed `<EFCoreVersion>` property; preserved `<LangVersion>` and `<InternalLibVersion>`
+Directory.Build.props — removed `<BlobsVersion>` property; preserved `<LangVersion>` and `<HostingVersion>`
 
 Updated `Directory.Build.props`:
 
@@ -293,7 +310,7 @@ Updated `Directory.Build.props`:
 <Project>
   <PropertyGroup>
     <LangVersion>latest</LangVersion>
-    <InternalLibVersion>3.2.0</InternalLibVersion>
+    <HostingVersion>8.0.1</HostingVersion>
   </PropertyGroup>
   <Import Project="Common.props" />
 </Project>
@@ -305,9 +322,9 @@ Updated `Directory.Build.props`:
 
 ### ✅ `bash`
 
-**Verify no remaining references to EFCoreVersion**
+**Verify no remaining references to DIVersion**
 
-$ grep -rn "EFCoreVersion" --include="*.csproj" --include="*.props" --include="*.targets" .
+$ grep -rn "BlobsVersion" --include="*.csproj" --include="*.props" --include="*.targets" .
 
 ```
 <exited with exit code 0>
@@ -335,9 +352,9 @@ $ dotnet restore Enterprise.sln
 
 ### ✅ `bash`
 
-**Build solution**
+**Build solution and capture post-conversion snapshot**
 
-$ dotnet build Enterprise.sln
+$ dotnet clean && dotnet build -bl:after-cpm.binlog && dotnet list package --format json > after-cpm-packages.json
 
 ```
 Build succeeded.
@@ -352,22 +369,44 @@ Build succeeded.
 
 ### 💬 Copilot
 
+**Package comparison (baseline → after CPM):**
+
+| Project | Package | Before | After | Status |
+|---------|---------|--------|-------|--------|
+| Api (net8.0) | Azure.Storage.Blobs | 12.24.0 | 12.24.0 | Unchanged |
+| Api (net8.0) | Microsoft.AspNetCore.Mvc.NewtonsoftJson | 8.0.11 | 8.0.11 | Unchanged |
+| Api (net6.0) | Microsoft.AspNetCore.Mvc.NewtonsoftJson | 6.0.36 | 6.0.36 | Unchanged |
+| Api | System.Text.Json | 10.0.1 | 10.0.1 | Unchanged |
+| Core | Microsoft.Extensions.Hosting | 8.0.1 | 8.0.1 | Unchanged |
+| Core | System.Text.Json | 9.0.0 | 9.0.0 | Via VersionOverride |
+| Legacy | Azure.Storage.Blobs | 12.19.0 | 12.19.0 | Via VersionOverride |
+| Legacy | System.Text.Json | 8.0.4 | 8.0.5 | ⚠️ Security fix (CVE-2024-43485) |
+| Tests | xunit | 2.9.3 | 2.9.3 | Unchanged |
+| Web | Microsoft.Extensions.Logging | 9.0.0 | 9.0.0 | Unchanged |
+| Web | OpenTelemetry.Extensions.Hosting | 1.15.0 | 1.15.0 | Unchanged |
+| Web | System.Text.Json | 10.0.1 | 10.0.1 | Unchanged |
+
+**1 intentional version change:** Legacy System.Text.Json 8.0.4 → 8.0.5 (CVE-2024-43485). All other versions unchanged.
+
 **Conversion complete.** Summary:
 
 - **5 projects** converted to Central Package Management
 - **7 unique packages** centralized in `Directory.Packages.props`
 - **Decisions applied:**
   - **System.Text.Json**: 10.0.1 centrally; Core uses `VersionOverride="9.0.0"`, Legacy uses `VersionOverride="8.0.5"` (bumped from 8.0.4 to resolve CVE-2024-43485)
-  - **EntityFrameworkCore**: 8.0.11 centrally; Legacy uses `VersionOverride="6.0.36"`
-  - **`$(EFCoreVersion)`**: Inlined and property removed from `Directory.Build.props`
-  - **`$(InternalLibVersion)`**: Kept as property, referenced from `Directory.Packages.props`
+  - **Azure.Storage.Blobs**: 12.24.0 centrally; Legacy uses `VersionOverride="12.19.0"`
+  - **`$(BlobsVersion)`**: Inlined and property removed from `Directory.Build.props`
+  - **`$(HostingVersion)`**: Kept as property, referenced from `Directory.Packages.props`
   - **Mvc.NewtonsoftJson**: Conditional `PackageVersion` entries for net6.0/net8.0
   - **Microsoft.Extensions.Logging**: Moved from `Common.props` to `Directory.Packages.props`
-- **Preserved**: `$(LangVersion)` and `$(InternalLibVersion)` in `Directory.Build.props`
+- **Preserved**: `$(LangVersion)` and `$(HostingVersion)` in `Directory.Build.props`
 - `dotnet restore` and `dotnet build` both succeeded
+- Package comparison confirms 1 intentional version change (System.Text.Json security fix for CVE-2024-43485)
+
+The `baseline.binlog` and `after-cpm.binlog` files are available for manual inspection in the [MSBuild Structured Log Viewer](https://msbuildlog.com/). The `baseline-packages.json` and `after-cpm-packages.json` files contain the raw package lists used for comparison.
 
 **Ongoing considerations:**
-- When `$(InternalLibVersion)` is updated in `Directory.Build.props`, it will automatically flow to `Directory.Packages.props`
+- When `$(HostingVersion)` is updated in `Directory.Build.props`, it will automatically flow to `Directory.Packages.props`
 - Core and Legacy have `VersionOverride` entries that should be reviewed when those projects are upgraded
 
 I recommend running your full test suite:

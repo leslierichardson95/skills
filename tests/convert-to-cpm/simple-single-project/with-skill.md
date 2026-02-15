@@ -32,7 +32,32 @@ Skill "convert-to-cpm" loaded successfully. Follow the instructions in the skill
 
 ### 💬 Copilot
 
-I'll convert your project to Central Package Management. Let me start by checking the scope and auditing package references.
+I'll convert your project to Central Package Management. Let me start by establishing a baseline build.
+
+---
+
+<sub>⏱️ 30s</sub>
+
+### ✅ `bash`
+
+**Establish baseline build and capture package snapshot**
+
+$ cd MyApp && dotnet clean && dotnet build -bl:baseline.binlog && dotnet list package --format json > baseline-packages.json
+
+```
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+<exited with exit code 0>
+```
+
+---
+
+<sub>⏱️ 40s</sub>
+
+### 💬 Copilot
+
+Baseline build succeeded. Now let me check the scope and audit package references.
 
 ---
 
@@ -153,9 +178,9 @@ $ cd MyApp && dotnet restore
 
 ### ✅ `bash`
 
-**Build project**
+**Build project and capture post-conversion snapshot**
 
-$ cd MyApp && dotnet build
+$ cd MyApp && dotnet clean && dotnet build -bl:after-cpm.binlog && dotnet list package --format json > after-cpm-packages.json
 
 ```
 Build succeeded.
@@ -170,12 +195,25 @@ Build succeeded.
 
 ### 💬 Copilot
 
+**Package comparison (baseline → after CPM):**
+
+| Project | Package | Before | After | Status |
+|---------|---------|--------|-------|--------|
+| MyApp | Microsoft.Extensions.Logging | 9.0.0 | 9.0.0 | Unchanged |
+| MyApp | Polly | 8.5.0 | 8.5.0 | Unchanged |
+| MyApp | System.Text.Json | 9.0.0 | 9.0.0 | Unchanged |
+
+All resolved versions are identical — the conversion is version-neutral.
+
 **Conversion complete.** Summary:
 
 - **1 project** converted to Central Package Management
 - **3 packages** centralized in `Directory.Packages.props`
 - No version conflicts or special cases encountered
 - `dotnet restore` and `dotnet build` both succeeded
+- Package comparison confirms no version changes
+
+The `baseline.binlog` and `after-cpm.binlog` files are available for manual inspection in the [MSBuild Structured Log Viewer](https://msbuildlog.com/). The `baseline-packages.json` and `after-cpm-packages.json` files contain the raw package lists used for comparison.
 
 I recommend running your tests to verify no behavioral changes:
 

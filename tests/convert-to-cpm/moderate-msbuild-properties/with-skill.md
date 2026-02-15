@@ -48,6 +48,23 @@ Data/Data.csproj
 
 ### ✅ `bash`
 
+**Establish baseline build and capture package snapshot**
+
+$ dotnet clean && dotnet build -bl:baseline.binlog && dotnet list package --format json > baseline-packages.json
+
+```
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+<exited with exit code 0>
+```
+
+---
+
+<sub>⏱️ 42s</sub>
+
+### ✅ `bash`
+
 **Check for existing CPM**
 
 $ find . -name "Directory.Packages.props" -type f
@@ -67,15 +84,15 @@ $ find . -name "Directory.Packages.props" -type f
 $ grep -rn "PackageReference\|PackageVersion" --include="*.csproj" --include="*.props" --include="*.targets" . && echo "---" && cat Directory.Build.props
 
 ```
-./Api/Api.csproj:7:    <PackageReference Include="Serilog.AspNetCore" Version="$(SerilogVersion)" />
-./Api/Api.csproj:8:    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.9.0" />
-./Data/Data.csproj:7:    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="$(EFCoreVersion)" />
-./Data/Data.csproj:8:    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="$(EFCoreVersion)" />
+./Api/Api.csproj:7:    <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="$(OTelVersion)" />
+./Api/Api.csproj:8:    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.24" />
+./Data/Data.csproj:7:    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="$(DIVersion)" />
+./Data/Data.csproj:8:    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="$(DIVersion)" />
 ---
 <Project>
   <PropertyGroup>
-    <SerilogVersion>3.1.1</SerilogVersion>
-    <EFCoreVersion>8.0.11</EFCoreVersion>
+    <OTelVersion>1.15.0</OTelVersion>
+    <DIVersion>9.0.0</DIVersion>
     <OutputPath>$(MSBuildThisFileDirectory)artifacts\$(MSBuildProjectName)\</OutputPath>
   </PropertyGroup>
 </Project>
@@ -92,21 +109,21 @@ $ grep -rn "PackageReference\|PackageVersion" --include="*.csproj" --include="*.
 
 | Package | Version | Source |
 |---------|---------|--------|
-| Serilog.AspNetCore | `$(SerilogVersion)` → **3.1.1** | Property in `Directory.Build.props` |
-| Swashbuckle.AspNetCore | **6.9.0** | Literal in `Api.csproj` |
-| Microsoft.EntityFrameworkCore | `$(EFCoreVersion)` → **8.0.11** | Property in `Directory.Build.props` |
-| Microsoft.EntityFrameworkCore.SqlServer | `$(EFCoreVersion)` → **8.0.11** | Property in `Directory.Build.props` |
+| OpenTelemetry.Extensions.Hosting | `$(OTelVersion)` → **1.15.0** | Property in `Directory.Build.props` |
+| Microsoft.AspNetCore.OpenApi | **8.0.24** | Literal in `Api.csproj` |
+| Microsoft.Extensions.DependencyInjection | `$(DIVersion)` → **9.0.0** | Property in `Directory.Build.props` |
+| Microsoft.Extensions.DependencyInjection.Abstractions | `$(DIVersion)` → **9.0.0** | Property in `Directory.Build.props` |
 
 No version conflicts across projects.
 
 **⚠️ MSBuild properties require your input:**
 
-1. **`$(SerilogVersion)` = 3.1.1** — Used only for Serilog.AspNetCore versioning. Should I:
-   - **Inline** the literal value `3.1.1` in `Directory.Packages.props` and remove the property from `Directory.Build.props`, or
-   - **Keep** the property and reference it as `Version="$(SerilogVersion)"` in `Directory.Packages.props`?
+1. **`$(OTelVersion)` = 1.15.0** — Used only for OpenTelemetry.Extensions.Hosting versioning. Should I:
+   - **Inline** the literal value `1.15.0` in `Directory.Packages.props` and remove the property from `Directory.Build.props`, or
+   - **Keep** the property and reference it as `Version="$(OTelVersion)"` in `Directory.Packages.props`?
 
-2. **`$(EFCoreVersion)` = 8.0.11** — Used for both EntityFrameworkCore and EntityFrameworkCore.SqlServer. Should I:
-   - **Inline** the literal value `8.0.11` for both packages and remove the property, or
+2. **`$(DIVersion)` = 9.0.0** — Used for both DependencyInjection and DependencyInjection.Abstractions. Should I:
+   - **Inline** the literal value `9.0.0` for both packages and remove the property, or
    - **Keep** the property so both packages stay in sync via a single variable?
 
 Note: `Directory.Build.props` also contains `$(OutputPath)` which is unrelated to package versioning and will not be modified.
@@ -141,10 +158,10 @@ The file contents:
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="8.0.11" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.11" />
-    <PackageVersion Include="Serilog.AspNetCore" Version="3.1.1" />
-    <PackageVersion Include="Swashbuckle.AspNetCore" Version="6.9.0" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="9.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.0" />
+    <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.15.0" />
+    <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="8.0.24" />
   </ItemGroup>
 </Project>
 ```
@@ -157,7 +174,7 @@ The file contents:
 
 **Remove Version attributes from Api.csproj**
 
-Api/Api.csproj — removed `Version` from Serilog.AspNetCore and Swashbuckle.AspNetCore
+Api/Api.csproj — removed `Version` from OpenTelemetry.Extensions.Hosting and Microsoft.AspNetCore.OpenApi
 
 ---
 
@@ -167,7 +184,7 @@ Api/Api.csproj — removed `Version` from Serilog.AspNetCore and Swashbuckle.Asp
 
 **Remove Version attributes from Data.csproj**
 
-Data/Data.csproj — removed `Version` from both EntityFrameworkCore packages
+Data/Data.csproj — removed `Version` from both DependencyInjection packages
 
 ---
 
@@ -177,7 +194,7 @@ Data/Data.csproj — removed `Version` from both EntityFrameworkCore packages
 
 **Remove version properties from Directory.Build.props**
 
-Directory.Build.props — removed `<SerilogVersion>` and `<EFCoreVersion>` properties; preserved `<OutputPath>`
+Directory.Build.props — removed `<OTelVersion>` and `<DIVersion>` properties; preserved `<OutputPath>`
 
 Updated `Directory.Build.props`:
 
@@ -197,7 +214,7 @@ Updated `Directory.Build.props`:
 
 **Verify no remaining references to removed properties**
 
-$ grep -rn "SerilogVersion\|EFCoreVersion" --include="*.csproj" --include="*.props" --include="*.targets" .
+$ grep -rn "OTelVersion\|DIVersion" --include="*.csproj" --include="*.props" --include="*.targets" .
 
 ```
 <exited with exit code 0>
@@ -225,9 +242,9 @@ $ dotnet restore Platform.sln
 
 ### ✅ `bash`
 
-**Build solution**
+**Build solution and capture post-conversion snapshot**
 
-$ dotnet build Platform.sln
+$ dotnet clean && dotnet build -bl:after-cpm.binlog && dotnet list package --format json > after-cpm-packages.json
 
 ```
 Build succeeded.
@@ -242,14 +259,28 @@ Build succeeded.
 
 ### 💬 Copilot
 
+**Package comparison (baseline → after CPM):**
+
+| Project | Package | Before | After | Status |
+|---------|---------|--------|-------|--------|
+| Api | OpenTelemetry.Extensions.Hosting | 1.15.0 | 1.15.0 | Unchanged |
+| Api | Microsoft.AspNetCore.OpenApi | 8.0.24 | 8.0.24 | Unchanged |
+| Data | Microsoft.Extensions.DependencyInjection | 9.0.0 | 9.0.0 | Unchanged |
+| Data | Microsoft.Extensions.DependencyInjection.Abstractions | 9.0.0 | 9.0.0 | Unchanged |
+
+All resolved versions are identical — the conversion is version-neutral.
+
 **Conversion complete.** Summary:
 
 - **2 projects** converted to Central Package Management
 - **4 packages** centralized in `Directory.Packages.props` with inline literal versions
-- **`$(SerilogVersion)`** and **`$(EFCoreVersion)`** properties removed from `Directory.Build.props`
+- **`$(OTelVersion)`** and **`$(DIVersion)`** properties removed from `Directory.Build.props`
 - **`$(OutputPath)`** preserved in `Directory.Build.props` (unrelated to versioning)
 - No remaining references to removed properties found
 - `dotnet restore` and `dotnet build` both succeeded
+- Package comparison confirms no version changes
+
+The `baseline.binlog` and `after-cpm.binlog` files are available for manual inspection in the [MSBuild Structured Log Viewer](https://msbuildlog.com/). The `baseline-packages.json` and `after-cpm-packages.json` files contain the raw package lists used for comparison.
 
 I recommend running your tests to verify no behavioral changes:
 

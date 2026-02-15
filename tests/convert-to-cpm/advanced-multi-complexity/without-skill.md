@@ -24,13 +24,13 @@ Legacy/Legacy.csproj
 Tests/Tests.csproj
 ./Web/Web.csproj:7:    <PackageReference Include="System.Text.Json" Version="10.0.1" />
 ./Api/Api.csproj:7:    <PackageReference Include="System.Text.Json" Version="10.0.1" />
-./Api/Api.csproj:8:    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="$(EFCoreVersion)" />
+./Api/Api.csproj:8:    <PackageReference Include="Azure.Storage.Blobs" Version="$(BlobsVersion)" />
 ./Api/Api.csproj:10:    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="6.0.36" />
 ./Api/Api.csproj:12:    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="8.0.11" />
 ./Core/Core.csproj:7:    <PackageReference Include="System.Text.Json" Version="9.0.0" />
-./Core/Core.csproj:8:    <PackageReference Include="Contoso.InternalLib" Version="$(InternalLibVersion)" />
+./Core/Core.csproj:8:    <PackageReference Include="Microsoft.Extensions.Hosting" Version="$(HostingVersion)" />
 ./Legacy/Legacy.csproj:7:    <PackageReference Include="System.Text.Json" Version="8.0.4" />
-./Legacy/Legacy.csproj:8:    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.36" />
+./Legacy/Legacy.csproj:8:    <PackageReference Include="Azure.Storage.Blobs" Version="12.19.0" />
 ./Tests/Tests.csproj:7:    <PackageReference Include="xunit" Version="2.9.3" />
 ./Tests/Tests.csproj:8:    <PackageReference Include="System.Text.Json" Version="10.0.1" />
 ./Common.props:3:    <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.0" />
