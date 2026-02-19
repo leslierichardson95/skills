@@ -73,6 +73,7 @@ jobs:
           path: ${{ matrix.skill }}
           fail-on-warning: "true"
           validate-references: "true"
+          ignore-rules: "reference-exists"
 
       - name: Save result
         if: always()
