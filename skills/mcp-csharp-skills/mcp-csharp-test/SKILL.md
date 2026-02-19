@@ -443,6 +443,24 @@ dotnet test --filter "Category=Integration"
 
 ---
 
+## ✅ MCP Protocol Validation Checklist
+
+After building your server, verify it responds correctly at the protocol level:
+
+- [ ] `dotnet --version` shows .NET 10 or later
+- [ ] Project builds without errors: `dotnet build`
+- [ ] Server starts successfully: `dotnet run`
+- [ ] Server responds to `initialize` request with server info and capabilities
+- [ ] Tools are discoverable via `tools/list` request
+- [ ] Tool calls execute successfully and return expected results
+- [ ] Prompts (if any) are listed via `prompts/list` and return valid templates
+- [ ] Resources (if any) are accessible via `resources/list` and `resources/read`
+- [ ] For HTTP: endpoint is reachable and CORS/auth work as configured
+- [ ] For stdio: no output leaks to stdout (only JSON-RPC messages)
+- [ ] Unit tests pass: `dotnet test`
+
+---
+
 **Load [📋 Testing Guide](./references/testing_guide.md) for detailed patterns and examples.**
 
 ---
