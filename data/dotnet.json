@@ -163,6 +163,33 @@
             "name": "csharp-scripts/Test a C# language feature with a script - Vanilla Quality"
           }
         ]
+      },
+      {
+        "benches": [
+          {
+            "value": 9.600000381469727,
+            "name": "csharp-scripts/Test a C# language feature with a script - Skilled Quality",
+            "unit": "Score (0-10)"
+          },
+          {
+            "value": 6.0,
+            "name": "csharp-scripts/Test a C# language feature with a script - Vanilla Quality",
+            "unit": "Score (0-10)"
+          }
+        ],
+        "model": "claude-opus-4.6",
+        "date": 1771571635209,
+        "commit": {
+          "id": "527d2d5b132c3e5f1537c638e572778d70518f06",
+          "url": "https://github.com/dotnet/skills/commit/527d2d5b132c3e5f1537c638e572778d70518f06",
+          "author": {
+            "username": "ViktorHofer",
+            "name": "Aditya Mandaleeka"
+          },
+          "timestamp": "2026-02-20T05:40:49+00:00",
+          "message": "fix: force array output in components.json for dashboard (#59)"
+        },
+        "tool": "customBiggerIsBetter"
       }
     ],
     "Efficiency": [
@@ -327,8 +354,35 @@
             "name": "csharp-scripts/Test a C# language feature with a script - Skilled Tokens In"
           }
         ]
+      },
+      {
+        "benches": [
+          {
+            "value": 33.1,
+            "name": "csharp-scripts/Test a C# language feature with a script - Skilled Time",
+            "unit": "seconds"
+          },
+          {
+            "value": 103927.0,
+            "name": "csharp-scripts/Test a C# language feature with a script - Skilled Tokens In",
+            "unit": "tokens"
+          }
+        ],
+        "model": "claude-opus-4.6",
+        "date": 1771571635209,
+        "commit": {
+          "id": "527d2d5b132c3e5f1537c638e572778d70518f06",
+          "url": "https://github.com/dotnet/skills/commit/527d2d5b132c3e5f1537c638e572778d70518f06",
+          "author": {
+            "username": "ViktorHofer",
+            "name": "Aditya Mandaleeka"
+          },
+          "timestamp": "2026-02-20T05:40:49+00:00",
+          "message": "fix: force array output in components.json for dashboard (#59)"
+        },
+        "tool": "customSmallerIsBetter"
       }
     ]
   },
-  "lastUpdate": 1771567884118
+  "lastUpdate": 1771571635209
 }
