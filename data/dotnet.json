@@ -325,6 +325,53 @@
         "date": 1771612123113,
         "tool": "customBiggerIsBetter",
         "model": "claude-opus-4.5"
+      },
+      {
+        "date": 1771625949156,
+        "tool": "customBiggerIsBetter",
+        "model": "claude-opus-4.5",
+        "benches": [
+          {
+            "value": 9.399999618530273,
+            "unit": "Score (0-10)",
+            "name": "csharp-scripts/Test a C# language feature with a script - Skilled Quality"
+          },
+          {
+            "value": 5.400000095367432,
+            "unit": "Score (0-10)",
+            "name": "csharp-scripts/Test a C# language feature with a script - Vanilla Quality"
+          },
+          {
+            "value": 10.0,
+            "unit": "Score (0-10)",
+            "name": "dotnet-pinvoke/Generate LibraryImport declaration from C header (.NET 8+) - Skilled Quality"
+          },
+          {
+            "value": 10.0,
+            "unit": "Score (0-10)",
+            "name": "dotnet-pinvoke/Generate LibraryImport declaration from C header (.NET 8+) - Vanilla Quality"
+          },
+          {
+            "value": 10.0,
+            "unit": "Score (0-10)",
+            "name": "dotnet-pinvoke/Generate LibraryImport declaration from C header (.NET Framework) - Skilled Quality"
+          },
+          {
+            "value": 10.0,
+            "unit": "Score (0-10)",
+            "name": "dotnet-pinvoke/Generate LibraryImport declaration from C header (.NET Framework) - Vanilla Quality"
+          }
+        ],
+        "commit": {
+          "message": "Merge pull request #54 from AaronRobinsonMSFT/interop_skill",
+          "author": {
+            "name": "Aaron R Robinson",
+            "username": "ViktorHofer"
+          },
+          "url": "https://github.com/dotnet/skills/commit/5e0845eb1d50716e77fc9ea2e91fd5081dbb4d2e",
+          "id": "5e0845eb1d50716e77fc9ea2e91fd5081dbb4d2e",
+          "timestamp": "2026-02-20T22:01:38+00:00"
+        }
       }
     ],
     "Efficiency": [
@@ -651,8 +698,55 @@
         "date": 1771612123113,
         "tool": "customSmallerIsBetter",
         "model": "claude-opus-4.5"
+      },
+      {
+        "date": 1771625949156,
+        "tool": "customSmallerIsBetter",
+        "model": "claude-opus-4.5",
+        "benches": [
+          {
+            "value": 46.7,
+            "unit": "seconds",
+            "name": "csharp-scripts/Test a C# language feature with a script - Skilled Time"
+          },
+          {
+            "value": 104634.0,
+            "unit": "tokens",
+            "name": "csharp-scripts/Test a C# language feature with a script - Skilled Tokens In"
+          },
+          {
+            "value": 20.0,
+            "unit": "seconds",
+            "name": "dotnet-pinvoke/Generate LibraryImport declaration from C header (.NET 8+) - Skilled Time"
+          },
+          {
+            "value": 44985.0,
+            "unit": "tokens",
+            "name": "dotnet-pinvoke/Generate LibraryImport declaration from C header (.NET 8+) - Skilled Tokens In"
+          },
+          {
+            "value": 18.2,
+            "unit": "seconds",
+            "name": "dotnet-pinvoke/Generate LibraryImport declaration from C header (.NET Framework) - Skilled Time"
+          },
+          {
+            "value": 45060.0,
+            "unit": "tokens",
+            "name": "dotnet-pinvoke/Generate LibraryImport declaration from C header (.NET Framework) - Skilled Tokens In"
+          }
+        ],
+        "commit": {
+          "message": "Merge pull request #54 from AaronRobinsonMSFT/interop_skill",
+          "author": {
+            "name": "Aaron R Robinson",
+            "username": "ViktorHofer"
+          },
+          "url": "https://github.com/dotnet/skills/commit/5e0845eb1d50716e77fc9ea2e91fd5081dbb4d2e",
+          "id": "5e0845eb1d50716e77fc9ea2e91fd5081dbb4d2e",
+          "timestamp": "2026-02-20T22:01:38+00:00"
+        }
       }
     ]
   },
-  "lastUpdate": 1771612123113
+  "lastUpdate": 1771625949156
 }
