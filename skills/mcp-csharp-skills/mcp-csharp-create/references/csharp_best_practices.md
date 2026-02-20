@@ -452,6 +452,71 @@ public static async Task<string> FetchUrl(
 }
 ```
 
+### Transport-Specific Security
+
+Security concerns differ significantly between stdio and HTTP transports:
+
+#### stdio Transport
+
+stdio servers run as local subprocesses under the calling user's OS credentials — there is no network attack surface.
+
+| Concern | Guidance |
+|---------|----------|
+| Authentication | Not needed — the parent process already authenticated the user |
+| File system access | Validate and sandbox paths (directory traversal is the primary risk) |
+| Command injection | Never pass unsanitized tool input to `Process.Start` or shell commands |
+| Secret storage | Use `dotnet user-secrets` or environment variables; secrets stay on the local machine |
+| stdout isolation | Never write anything to stdout except JSON-RPC messages — use stderr for logging |
+
+#### HTTP Transport
+
+HTTP servers are network-exposed and must be hardened like any web service.
+
+| Concern | Guidance |
+|---------|----------|
+| Authentication | **Required in production.** Use JWT Bearer, API keys, or OAuth. See the [JWT Bearer example](../references/csharp_mcp_server.md#http-authentication-jwt-bearer) |
+| HTTPS/TLS | Always use HTTPS in production. Terminate TLS at the server or reverse proxy |
+| CORS | Configure an explicit allow-list of origins. Never use `AllowAnyOrigin()` with `AllowCredentials()` |
+| Rate limiting | Add `Microsoft.AspNetCore.RateLimiting` middleware to prevent abuse |
+| Request size limits | Set `MaxRequestBodySize` to prevent oversized payloads (default is 30 MB — consider lowering) |
+| SSRF prevention | Validate URLs in tool parameters to block requests to internal networks (`localhost`, `10.*`, `192.168.*`) |
+| Health endpoint | Expose `/health` without auth for load balancers, but don't leak internal details |
+
+```csharp
+// Example: HTTP server with rate limiting + auth + HTTPS redirection
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddRateLimiter(options =>
+{
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 100,
+                Window = TimeSpan.FromMinutes(1)
+            }));
+});
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options => { /* configure */ });
+builder.Services.AddAuthorization();
+
+builder.Services.AddMcpServer()
+    .WithHttpTransport()
+    .WithToolsFromAssembly();
+
+var app = builder.Build();
+
+app.UseHttpsRedirection();
+app.UseRateLimiter();
+app.UseAuthentication();
+app.UseAuthorization();
+app.MapMcp().RequireAuthorization();
+
+app.Run();
+```
+
 ---
 
 ## Logging Best Practices
