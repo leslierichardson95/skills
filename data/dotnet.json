@@ -1312,6 +1312,53 @@
         },
         "tool": "customBiggerIsBetter",
         "date": 1771777286882
+      },
+      {
+        "model": "claude-opus-4.5",
+        "date": 1771784458911,
+        "tool": "customBiggerIsBetter",
+        "benches": [
+          {
+            "name": "csharp-scripts/Test a C# language feature with a script - Skilled Quality",
+            "value": 10.0,
+            "unit": "Score (0-10)"
+          },
+          {
+            "name": "csharp-scripts/Test a C# language feature with a script - Vanilla Quality",
+            "value": 6.0,
+            "unit": "Score (0-10)"
+          },
+          {
+            "name": "dotnet-pinvoke/Generate LibraryImport declaration from C header (.NET 8+) - Skilled Quality",
+            "value": 10.0,
+            "unit": "Score (0-10)"
+          },
+          {
+            "name": "dotnet-pinvoke/Generate LibraryImport declaration from C header (.NET 8+) - Vanilla Quality",
+            "value": 10.0,
+            "unit": "Score (0-10)"
+          },
+          {
+            "name": "dotnet-pinvoke/Generate LibraryImport declaration from C header (.NET Framework) - Skilled Quality",
+            "value": 10.0,
+            "unit": "Score (0-10)"
+          },
+          {
+            "name": "dotnet-pinvoke/Generate LibraryImport declaration from C header (.NET Framework) - Vanilla Quality",
+            "value": 7.400000095367432,
+            "unit": "Score (0-10)"
+          }
+        ],
+        "commit": {
+          "id": "86dc027673adb546b023eaa52ee8e4a13237f1f9",
+          "message": "Revert \"Added C# MCP Server development skills (#36)\" (#74)",
+          "timestamp": "2026-02-21T16:26:36+00:00",
+          "author": {
+            "name": "leslierichardson95",
+            "username": "ViktorHofer"
+          },
+          "url": "https://github.com/dotnet/skills/commit/86dc027673adb546b023eaa52ee8e4a13237f1f9"
+        }
       }
     ],
     "Efficiency": [
@@ -2625,8 +2672,55 @@
         },
         "tool": "customSmallerIsBetter",
         "date": 1771777286882
+      },
+      {
+        "model": "claude-opus-4.5",
+        "date": 1771784458911,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "csharp-scripts/Test a C# language feature with a script - Skilled Time",
+            "value": 51.8,
+            "unit": "seconds"
+          },
+          {
+            "name": "csharp-scripts/Test a C# language feature with a script - Skilled Tokens In",
+            "value": 116730.0,
+            "unit": "tokens"
+          },
+          {
+            "name": "dotnet-pinvoke/Generate LibraryImport declaration from C header (.NET 8+) - Skilled Time",
+            "value": 20.6,
+            "unit": "seconds"
+          },
+          {
+            "name": "dotnet-pinvoke/Generate LibraryImport declaration from C header (.NET 8+) - Skilled Tokens In",
+            "value": 45191.0,
+            "unit": "tokens"
+          },
+          {
+            "name": "dotnet-pinvoke/Generate LibraryImport declaration from C header (.NET Framework) - Skilled Time",
+            "value": 17.4,
+            "unit": "seconds"
+          },
+          {
+            "name": "dotnet-pinvoke/Generate LibraryImport declaration from C header (.NET Framework) - Skilled Tokens In",
+            "value": 44867.0,
+            "unit": "tokens"
+          }
+        ],
+        "commit": {
+          "id": "86dc027673adb546b023eaa52ee8e4a13237f1f9",
+          "message": "Revert \"Added C# MCP Server development skills (#36)\" (#74)",
+          "timestamp": "2026-02-21T16:26:36+00:00",
+          "author": {
+            "name": "leslierichardson95",
+            "username": "ViktorHofer"
+          },
+          "url": "https://github.com/dotnet/skills/commit/86dc027673adb546b023eaa52ee8e4a13237f1f9"
+        }
       }
     ]
   },
-  "lastUpdate": 1771777286882
+  "lastUpdate": 1771784458911
 }
