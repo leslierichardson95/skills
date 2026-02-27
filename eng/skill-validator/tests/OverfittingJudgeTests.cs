@@ -284,7 +284,7 @@ public class OverfittingJudgeTests
     }
 
     [Fact]
-    public void BuildUserPrompt_IncludesSkillAndEvalContent()
+    public async Task BuildUserPrompt_IncludesSkillAndEvalContent()
     {
         var skill = new SkillInfo(
             Name: "test-skill",
@@ -299,7 +299,7 @@ public class OverfittingJudgeTests
                     Rubric: new List<string> { "Did the thing correctly" })
             }));
 
-        var prompt = OverfittingJudge.BuildUserPrompt(skill);
+        var prompt = await OverfittingJudge.BuildUserPromptAsync(skill);
 
         Assert.Contains("SKILL_CONTENT_START", prompt);
         Assert.Contains("SKILL_CONTENT_END", prompt);
@@ -310,7 +310,7 @@ public class OverfittingJudgeTests
     }
 
     [Fact]
-    public void BuildUserPrompt_TruncatesLargeSkillContent()
+    public async Task BuildUserPrompt_TruncatesLargeSkillContent()
     {
         var largeContent = new string('x', 50_000);
         var skill = new SkillInfo(
@@ -322,7 +322,7 @@ public class OverfittingJudgeTests
             EvalPath: null,
             EvalConfig: new EvalConfig(new List<EvalScenario>()));
 
-        var prompt = OverfittingJudge.BuildUserPrompt(skill);
+        var prompt = await OverfittingJudge.BuildUserPromptAsync(skill);
 
         Assert.Contains("TRUNCATED", prompt);
         Assert.Contains("large-skill/SKILL.md", prompt);

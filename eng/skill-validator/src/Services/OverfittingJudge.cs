@@ -58,7 +58,7 @@ public static class OverfittingJudge
             }),
         });
 
-        var userPrompt = BuildUserPrompt(skill);
+        var userPrompt = await BuildUserPromptAsync(skill);
 
         using var cts = new CancellationTokenSource(options.Timeout);
         using var timer = new Timer(_ =>
@@ -437,7 +437,7 @@ public static class OverfittingJudge
         Respond ONLY with JSON. No markdown, no commentary outside the JSON.
         """;
 
-    internal static string BuildUserPrompt(SkillInfo skill)
+    internal static async Task<string> BuildUserPromptAsync(SkillInfo skill)
     {
         // Prepare skill content (truncate if needed)
         var skillContent = skill.SkillMdContent;
@@ -451,7 +451,7 @@ public static class OverfittingJudge
         string evalYaml = "(eval.yaml not available)";
         if (skill.EvalPath is not null && File.Exists(skill.EvalPath))
         {
-            evalYaml = File.ReadAllText(skill.EvalPath);
+            evalYaml = await File.ReadAllTextAsync(skill.EvalPath);
         }
 
         return $$"""
