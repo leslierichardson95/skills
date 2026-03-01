@@ -14,6 +14,7 @@ public sealed record RunOptions(
     bool Verbose,
     Action<string>? Log = null,
     string? SessionsDir = null,
+    string? SessionId = null,
     string? SessionRole = null,
     string? SkillName = null,
     string? ScenarioName = null,
@@ -105,15 +106,16 @@ public static class AgentRunner
     internal static SessionConfig BuildSessionConfig(
         SkillInfo? skill, string model, string workDir,
         IReadOnlyDictionary<string, MCPServerDef>? mcpServers = null,
-        string? sessionsDir = null)
+        string? sessionsDir = null, string? sessionId = null)
     {
         var skillPath = skill is not null ? Path.GetDirectoryName(skill.Path) : null;
 
         string configDir;
         if (sessionsDir is not null)
         {
-            // Persistent session dir — preserved for rejudging
-            configDir = Path.Combine(sessionsDir, Guid.NewGuid().ToString("N"));
+            // Persistent session dir — use sessionId as folder name for DB linkage
+            var dirName = sessionId ?? Guid.NewGuid().ToString("N");
+            configDir = Path.Combine(sessionsDir, dirName);
             Directory.CreateDirectory(configDir);
             _configDirs.Add(configDir);
         }
@@ -184,7 +186,7 @@ public static class AgentRunner
             var client = await GetSharedClient(options.Verbose);
 
             await using var session = await client.CreateSessionAsync(
-                BuildSessionConfig(options.Skill, options.Model, workDir, options.Skill?.McpServers, options.SessionsDir));
+                BuildSessionConfig(options.Skill, options.Model, workDir, options.Skill?.McpServers, options.SessionsDir, options.SessionId));
 
             var done = new TaskCompletionSource();
             var effectiveTimeout = options.Scenario.Timeout;

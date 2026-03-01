@@ -452,17 +452,19 @@ public static class ValidateCommand
         var baselineSessionId = Guid.NewGuid().ToString("N");
         var skillSessionId = Guid.NewGuid().ToString("N");
 
-        // Register sessions before running
+        // Register sessions before running — config_dir stored as relative path for portability
         var skillDir = Path.GetDirectoryName(skill.Path);
         var skillSha = skillDir is not null ? SessionDatabase.ComputeDirectorySha(skillDir) : null;
-        sessionDb?.RegisterSession(baselineSessionId, skill.Name, skill.Path, scenario.Name, runIndex, "baseline", config.Model, null, null, scenario.Prompt, skillSha);
-        sessionDb?.RegisterSession(skillSessionId, skill.Name, skill.Path, scenario.Name, runIndex, "with-skill", config.Model, null, null, scenario.Prompt, skillSha);
+        var baselineConfigDir = sessionsDir is not null ? Path.Combine("sessions", baselineSessionId) : null;
+        var skillConfigDir = sessionsDir is not null ? Path.Combine("sessions", skillSessionId) : null;
+        sessionDb?.RegisterSession(baselineSessionId, skill.Name, skill.Path, scenario.Name, runIndex, "baseline", config.Model, baselineConfigDir, null, scenario.Prompt, skillSha);
+        sessionDb?.RegisterSession(skillSessionId, skill.Name, skill.Path, scenario.Name, runIndex, "with-skill", config.Model, skillConfigDir, null, scenario.Prompt, skillSha);
 
         var agentTasks = await Task.WhenAll(
             AgentRunner.RunAgent(new RunOptions(scenario, null, skill.EvalPath, config.Model, config.Verbose, runLog,
-                SessionsDir: sessionsDir, SessionRole: "baseline", SkillName: skill.Name, ScenarioName: scenario.Name, RunIndex: runIndex)),
+                SessionsDir: sessionsDir, SessionId: baselineSessionId, SessionRole: "baseline", SkillName: skill.Name, ScenarioName: scenario.Name, RunIndex: runIndex)),
             AgentRunner.RunAgent(new RunOptions(scenario, skill, skill.EvalPath, config.Model, config.Verbose, runLog,
-                SessionsDir: sessionsDir, SessionRole: "with-skill", SkillName: skill.Name, ScenarioName: scenario.Name, RunIndex: runIndex)));
+                SessionsDir: sessionsDir, SessionId: skillSessionId, SessionRole: "with-skill", SkillName: skill.Name, ScenarioName: scenario.Name, RunIndex: runIndex)));
         var baselineMetrics = agentTasks[0];
         var withSkillMetrics = agentTasks[1];
 
