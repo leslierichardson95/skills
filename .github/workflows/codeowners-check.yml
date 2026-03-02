@@ -1,0 +1,23 @@
+name: CODEOWNERS check
+
+on:
+  pull_request:
+    paths:
+      - 'plugins/**'
+
+permissions:
+  contents: read
+
+jobs:
+  check-codeowners:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check that all plugins changes have a CODEOWNERS entry
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: python3 .github/scripts/check-codeowners.py
