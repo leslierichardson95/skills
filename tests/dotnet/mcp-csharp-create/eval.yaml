@@ -1,0 +1,56 @@
+scenarios:
+  - name: "Create a new stdio MCP server from scratch"
+    prompt: |
+      I want to create a new C# MCP server that provides tools for interacting
+      with a REST API for managing TODO items. It should use stdio transport.
+      Help me scaffold the project and implement a basic tool.
+    assertions:
+      - type: "output_contains"
+        value: "dotnet new mcpserver"
+      - type: "output_contains"
+        value: "[McpServerTool]"
+      - type: "output_matches"
+        pattern: "(WithStdioServerTransport|stdio)"
+    rubric:
+      - "Checks for or installs the mcpserver template before scaffolding"
+      - "Uses dotnet new mcpserver to scaffold the project"
+      - "Shows a tool method with [McpServerToolType] and [McpServerTool] attributes"
+      - "Includes [Description] attributes on the method and parameters"
+      - "Configures stdio transport in Program.cs"
+    timeout: 240
+  - name: "Create an HTTP MCP server with ASP.NET Core"
+    prompt: |
+      I need to create a C# MCP server that uses HTTP transport so it can be
+      deployed as a web service. It should have a tool that queries a database.
+      How do I set this up?
+    assertions:
+      - type: "output_contains"
+        value: "MapMcp"
+      - type: "output_matches"
+        pattern: "(WithHttpTransport|--transport remote|--transport http)"
+      - type: "output_contains"
+        value: "ModelContextProtocol.AspNetCore"
+    rubric:
+      - "Scaffolds with dotnet new mcpserver --transport remote or configures HTTP manually"
+      - "Includes MapMcp() in the endpoint configuration"
+      - "References ModelContextProtocol.AspNetCore package"
+      - "Shows how to register tools with the DI container"
+    timeout: 300
+  - name: "Add tools with dependency injection to an existing MCP server"
+    prompt: |
+      I have an existing C# MCP server project. I want to add a new tool class
+      that needs an HttpClient and ILogger injected. How do I set up the DI
+      and implement the tool?
+    assertions:
+      - type: "output_contains"
+        value: "[McpServerToolType]"
+      - type: "output_contains"
+        value: "[McpServerTool]"
+      - type: "output_matches"
+        pattern: "(AddHttpClient|HttpClient)"
+    rubric:
+      - "Shows a tool class with constructor injection of HttpClient and ILogger"
+      - "Registers HttpClient in the DI container using AddHttpClient or similar"
+      - "Uses [McpServerToolType] on the class and [McpServerTool] on methods"
+      - "Adds [Description] attributes for LLM discoverability"
+    timeout: 120

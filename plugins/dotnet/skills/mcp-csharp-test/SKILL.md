@@ -1,0 +1,206 @@
+---
+name: mcp-csharp-test
+description: >
+  Test C# MCP servers at multiple levels: unit tests for individual tools, integration
+  tests using the MCP client SDK, and LLM effectiveness evaluations.
+  USE FOR: unit testing MCP tool methods, integration testing with in-memory MCP
+  client/server, end-to-end testing via MCP protocol, creating LLM evaluation question sets,
+  testing HTTP MCP servers with WebApplicationFactory, mocking dependencies in tool tests.
+  DO NOT USE FOR: testing MCP clients (this is server testing only), load or performance
+  testing, testing non-.NET MCP servers, debugging server issues (use mcp-csharp-debug).
+---
+
+# C# MCP Server Testing
+
+Test MCP servers at three levels: unit tests for individual tool methods, integration tests that exercise the full MCP protocol in-memory, and evaluations that measure LLM effectiveness when using your tools.
+
+## When to Use
+
+- Adding automated tests to an MCP server
+- Testing individual tool methods with mocked dependencies
+- Writing integration tests that validate tool listing and invocation via MCP protocol
+- Creating evaluation question sets to measure LLM effectiveness with your tools
+- Setting up CI test pipelines for MCP servers
+
+## Stop Signals
+
+- **No server yet?** → Use [mcp-csharp-create](../mcp-csharp-create/SKILL.md) first
+- **Server not running?** → Use [mcp-csharp-debug](../mcp-csharp-debug/SKILL.md)
+- **Just need manual/interactive testing?** → Use [mcp-csharp-debug](../mcp-csharp-debug/SKILL.md) for MCP Inspector
+
+## Inputs
+
+| Input | Required | Description |
+|-------|----------|-------------|
+| MCP server project path | Yes | Path to the server `.csproj` being tested |
+| Test framework | Recommended | Default: xUnit. Also supports NUnit or MSTest |
+| Transport type | Recommended | Determines integration test approach (stdio vs HTTP) |
+
+## Workflow
+
+### Step 1: Create the test project
+
+```bash
+dotnet new xunit -n <ServerName>.Tests
+cd <ServerName>.Tests
+dotnet add reference ../<ServerName>/<ServerName>.csproj
+dotnet add package ModelContextProtocol
+dotnet add package Moq
+dotnet add package FluentAssertions
+```
+
+### Step 2: Write unit tests for tool methods
+
+Test tool methods directly — fastest and most isolated:
+
+```csharp
+public class MyToolTests
+{
+    [Fact]
+    public void Echo_ReturnsFormattedMessage()
+    {
+        var result = MyTools.Echo("Hello");
+        result.Should().Be("Echo: Hello");
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void Echo_HandlesEdgeCases(string input)
+    {
+        var result = MyTools.Echo(input);
+        result.Should().StartWith("Echo:");
+    }
+}
+```
+
+For tools with DI dependencies, mock the dependency:
+```csharp
+public class ApiToolTests
+{
+    [Fact]
+    public async Task FetchData_ReturnsApiResponse()
+    {
+        var handler = new MockHttpMessageHandler("""{"id": 1}""");
+        var httpClient = new HttpClient(handler);
+
+        var result = await ApiTools.FetchData(httpClient, "resource-1");
+        result.Should().Contain("id");
+    }
+}
+```
+
+### Step 3: Write integration tests with MCP client
+
+Test the full MCP protocol using a client-server connection:
+
+```csharp
+using ModelContextProtocol.Client;
+
+public class ServerIntegrationTests : IAsyncLifetime
+{
+    private McpClient _client = null!;
+
+    public async Task InitializeAsync()
+    {
+        var transport = new StdioClientTransport(new StdioClientTransportOptions
+        {
+            Name = "TestClient",
+            Command = "dotnet",
+            Arguments = ["run", "--project", "../<ServerName>/<ServerName>.csproj"]
+        });
+        _client = await McpClient.CreateAsync(transport);
+    }
+
+    public async Task DisposeAsync() => await _client.DisposeAsync();
+
+    [Fact]
+    public async Task Server_ListsExpectedTools()
+    {
+        var tools = await _client.ListToolsAsync();
+        tools.Should().Contain(t => t.Name == "echo");
+    }
+
+    [Fact]
+    public async Task Tool_ReturnsExpectedResult()
+    {
+        var result = await _client.CallToolAsync("echo",
+            new Dictionary<string, object?> { ["message"] = "Test" });
+        var text = result.Content.OfType<TextContentBlock>().First().Text;
+        text.Should().Contain("Test");
+    }
+}
+```
+
+**For the SDK's `ClientServerTestBase` (in-memory testing) and HTTP testing with `WebApplicationFactory`**, see [references/test-patterns.md](references/test-patterns.md).
+
+### Step 4: Create evaluations (optional)
+
+Evaluations measure how effectively LLMs use your tools to accomplish tasks. Create questions that are independent, read-only, require multiple tool calls, and have verifiable answers.
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<evaluation>
+  <metadata>
+    <server_name>MyMcpServer</server_name>
+    <version>1.0.0</version>
+  </metadata>
+  <qa_pair>
+    <question>Using the search tool, find users in "engineering" who joined
+    after 2024. What domain is most common in their emails?</question>
+    <answer>company.com</answer>
+    <difficulty>medium</difficulty>
+    <required_tools>search_users, list_teams</required_tools>
+  </qa_pair>
+</evaluation>
+```
+
+**For evaluation guidelines, good/bad question examples, and the full XML schema**, see [references/evaluation-guide.md](references/evaluation-guide.md).
+
+### Step 5: Run tests
+
+```bash
+# Run all tests
+dotnet test
+
+# Run a specific test class
+dotnet test --filter "FullyQualifiedName~MyToolTests"
+
+# Run with coverage
+dotnet test --collect:"XPlat Code Coverage"
+```
+
+## Validation
+
+- [ ] Unit tests cover all tool methods, including edge cases
+- [ ] Integration tests verify tool listing via `ListToolsAsync()`
+- [ ] Integration tests verify tool invocation via `CallToolAsync()`
+- [ ] All tests pass: `dotnet test`
+- [ ] Tests run in CI without manual setup
+
+## Common Pitfalls
+
+| Pitfall | Solution |
+|---------|----------|
+| Integration test hangs on `CreateAsync` | Server fails to start. Verify `dotnet build` succeeds first. For stdio, ensure no stdout logging |
+| `StdioClientTransport` not finding project | Use the correct relative path to `.csproj` from the test project directory |
+| Tests pass locally but fail in CI | Run `dotnet build` before test execution. Use `--no-build` only after an explicit build step |
+| Mocking `HttpClient` is awkward | Mock `HttpMessageHandler`, not `HttpClient` directly. See [references/test-patterns.md](references/test-patterns.md) |
+| Evaluation answers change over time | Use stable, deterministic data. Avoid questions about "latest" or time-dependent values |
+| Full test suite runs are slow | Use `--filter` for development. Run the full suite only for CI verification |
+
+## Related Skills
+
+- [mcp-csharp-create](../mcp-csharp-create/SKILL.md) — Create a new MCP server project
+- [mcp-csharp-debug](../mcp-csharp-debug/SKILL.md) — Running and interactive debugging
+- [mcp-csharp-publish](../mcp-csharp-publish/SKILL.md) — NuGet, Docker, Azure deployment
+
+## Reference Files
+
+- [references/test-patterns.md](references/test-patterns.md) — Complete test code examples: `ClientServerTestBase` in-memory pattern, `WebApplicationFactory` for HTTP, `MockHttpMessageHandler` helper, test categorization, coverage reporting. **Load when:** writing integration tests or need detailed mock patterns.
+- [references/evaluation-guide.md](references/evaluation-guide.md) — Evaluation creation guidelines, XML format reference, good/bad question examples, criteria for verifiable evaluations. **Load when:** creating LLM effectiveness evaluations.
+
+## More Info
+
+- [xUnit documentation](https://xunit.net/docs/getting-started/netcore/cmdline) — Getting started with xUnit for .NET
+- [FluentAssertions](https://fluentassertions.com/) — Readable assertion library for .NET
