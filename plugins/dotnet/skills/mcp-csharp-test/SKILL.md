@@ -1,10 +1,10 @@
 ---
 name: mcp-csharp-test
 description: >
-  Test C# MCP servers at multiple levels: unit tests for individual tools, integration
-  tests using the MCP client SDK, and LLM effectiveness evaluations.
+  Test C# MCP servers at multiple levels: unit tests for individual tools and integration
+  tests using the MCP client SDK.
   USE FOR: unit testing MCP tool methods, integration testing with in-memory MCP
-  client/server, end-to-end testing via MCP protocol, creating LLM evaluation question sets,
+  client/server, end-to-end testing via MCP protocol,
   testing HTTP MCP servers with WebApplicationFactory, mocking dependencies in tool tests.
   DO NOT USE FOR: testing MCP clients (this is server testing only), load or performance
   testing, testing non-.NET MCP servers, debugging server issues (use mcp-csharp-debug).
@@ -12,14 +12,13 @@ description: >
 
 # C# MCP Server Testing
 
-Test MCP servers at three levels: unit tests for individual tool methods, integration tests that exercise the full MCP protocol in-memory, and evaluations that measure LLM effectiveness when using your tools.
+Test MCP servers at two levels: unit tests for individual tool methods, and integration tests that exercise the full MCP protocol in-memory.
 
 ## When to Use
 
 - Adding automated tests to an MCP server
 - Testing individual tool methods with mocked dependencies
 - Writing integration tests that validate tool listing and invocation via MCP protocol
-- Creating evaluation question sets to measure LLM effectiveness with your tools
 - Setting up CI test pipelines for MCP servers
 
 ## Stop Signals
@@ -134,30 +133,7 @@ public class ServerIntegrationTests : IAsyncLifetime
 
 **For the SDK's `ClientServerTestBase` (in-memory testing) and HTTP testing with `WebApplicationFactory`**, see [references/test-patterns.md](references/test-patterns.md).
 
-### Step 4: Create evaluations (optional)
-
-Evaluations measure how effectively LLMs use your tools to accomplish tasks. Create questions that are independent, read-only, require multiple tool calls, and have verifiable answers.
-
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<evaluation>
-  <metadata>
-    <server_name>MyMcpServer</server_name>
-    <version>1.0.0</version>
-  </metadata>
-  <qa_pair>
-    <question>Using the search tool, find users in "engineering" who joined
-    after 2024. What domain is most common in their emails?</question>
-    <answer>company.com</answer>
-    <difficulty>medium</difficulty>
-    <required_tools>search_users, list_teams</required_tools>
-  </qa_pair>
-</evaluation>
-```
-
-**For evaluation guidelines, good/bad question examples, and the full XML schema**, see [references/evaluation-guide.md](references/evaluation-guide.md).
-
-### Step 5: Run tests
+### Step 4: Run tests
 
 ```bash
 # Run all tests
@@ -186,7 +162,6 @@ dotnet test --collect:"XPlat Code Coverage"
 | `StdioClientTransport` not finding project | Use the correct relative path to `.csproj` from the test project directory |
 | Tests pass locally but fail in CI | Run `dotnet build` before test execution. Use `--no-build` only after an explicit build step |
 | Mocking `HttpClient` is awkward | Mock `HttpMessageHandler`, not `HttpClient` directly. See [references/test-patterns.md](references/test-patterns.md) |
-| Evaluation answers change over time | Use stable, deterministic data. Avoid questions about "latest" or time-dependent values |
 | Full test suite runs are slow | Use `--filter` for development. Run the full suite only for CI verification |
 
 ## Related Skills
@@ -198,7 +173,6 @@ dotnet test --collect:"XPlat Code Coverage"
 ## Reference Files
 
 - [references/test-patterns.md](references/test-patterns.md) — Complete test code examples: `ClientServerTestBase` in-memory pattern, `WebApplicationFactory` for HTTP, `MockHttpMessageHandler` helper, test categorization, coverage reporting. **Load when:** writing integration tests or need detailed mock patterns.
-- [references/evaluation-guide.md](references/evaluation-guide.md) — Evaluation creation guidelines, XML format reference, good/bad question examples, criteria for verifiable evaluations. **Load when:** creating LLM effectiveness evaluations.
 
 ## More Info
 
