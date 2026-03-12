@@ -23,9 +23,9 @@ Test MCP servers at two levels: unit tests for individual tool methods, and inte
 
 ## Stop Signals
 
-- **No server yet?** → Use [mcp-csharp-create](../mcp-csharp-create/SKILL.md) first
-- **Server not running?** → Use [mcp-csharp-debug](../mcp-csharp-debug/SKILL.md)
-- **Just need manual/interactive testing?** → Use [mcp-csharp-debug](../mcp-csharp-debug/SKILL.md) for MCP Inspector
+- **No server yet?** → Use `mcp-csharp-create` first
+- **Server not running?** → Use `mcp-csharp-debug`
+- **Just need manual/interactive testing?** → Use `mcp-csharp-debug` for MCP Inspector
 
 ## Inputs
 
@@ -166,9 +166,9 @@ dotnet test --collect:"XPlat Code Coverage"
 
 ## Related Skills
 
-- [mcp-csharp-create](../mcp-csharp-create/SKILL.md) — Create a new MCP server project
-- [mcp-csharp-debug](../mcp-csharp-debug/SKILL.md) — Running and interactive debugging
-- [mcp-csharp-publish](../mcp-csharp-publish/SKILL.md) — NuGet, Docker, Azure deployment
+- `mcp-csharp-create` — Create a new MCP server project
+- `mcp-csharp-debug` — Running and interactive debugging
+- `mcp-csharp-publish` — NuGet, Docker, Azure deployment
 
 ## Reference Files
 

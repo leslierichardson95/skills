@@ -141,4 +141,4 @@ If you plan to publish to the MCP Registry, include `.mcp/server.json` in your r
 
 ## Trusted Publishing (OIDC)
 
-For CI/CD, use NuGet trusted publishing instead of long-lived API keys. See [nuget-trusted-publishing](../../nuget-trusted-publishing/SKILL.md) for the full setup guide.
+For CI/CD, use NuGet trusted publishing instead of long-lived API keys. See `nuget-trusted-publishing` skill for the full setup guide.

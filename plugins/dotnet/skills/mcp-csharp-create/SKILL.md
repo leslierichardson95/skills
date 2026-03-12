@@ -25,9 +25,9 @@ Create Model Context Protocol servers using the official C# SDK (`ModelContextPr
 
 ## Stop Signals
 
-- **Server already exists and needs debugging?** → Use [mcp-csharp-debug](../mcp-csharp-debug/SKILL.md)
-- **Need tests or evaluations?** → Use [mcp-csharp-test](../mcp-csharp-test/SKILL.md)
-- **Ready to publish?** → Use [mcp-csharp-publish](../mcp-csharp-publish/SKILL.md)
+- **Server already exists and needs debugging?** → Use `mcp-csharp-debug`
+- **Need tests or evaluations?** → Use `mcp-csharp-test`
+- **Ready to publish?** → Use `mcp-csharp-publish`
 - **Building an MCP client, not a server** → This skill is server-side only
 
 ## Inputs
@@ -249,9 +249,9 @@ For HTTP: the server listens on the configured port.
 
 ## Related Skills
 
-- [mcp-csharp-debug](../mcp-csharp-debug/SKILL.md) — Run, debug, and test with MCP Inspector
-- [mcp-csharp-test](../mcp-csharp-test/SKILL.md) — Unit tests, integration tests, evaluations
-- [mcp-csharp-publish](../mcp-csharp-publish/SKILL.md) — NuGet, Docker, Azure deployment
+- `mcp-csharp-debug` — Run, debug, and test with MCP Inspector
+- `mcp-csharp-test` — Unit tests, integration tests, evaluations
+- `mcp-csharp-publish` — NuGet, Docker, Azure deployment
 
 ## Reference Files
 

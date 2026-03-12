@@ -27,10 +27,10 @@ Publish and deploy MCP servers to their target platforms. stdio servers are dist
 
 ## Stop Signals
 
-- **Server not tested yet?** → Use [mcp-csharp-test](../mcp-csharp-test/SKILL.md) first
-- **Server not working locally?** → Use [mcp-csharp-debug](../mcp-csharp-debug/SKILL.md)
-- **No server project yet?** → Use [mcp-csharp-create](../mcp-csharp-create/SKILL.md)
-- **Publishing a non-MCP NuGet package?** → Use [nuget-trusted-publishing](../nuget-trusted-publishing/SKILL.md) instead
+- **Server not tested yet?** → Use `mcp-csharp-test` first
+- **Server not working locally?** → Use `mcp-csharp-debug`
+- **No server project yet?** → Use `mcp-csharp-create`
+- **Publishing a non-MCP NuGet package?** → Use `nuget-trusted-publishing` instead
 
 ## Inputs
 
@@ -258,9 +258,9 @@ curl "https://registry.modelcontextprotocol.io/v0.1/servers?search=io.github.<us
 
 ## Related Skills
 
-- [mcp-csharp-create](../mcp-csharp-create/SKILL.md) — Create a new MCP server project
-- [mcp-csharp-debug](../mcp-csharp-debug/SKILL.md) — Running and interactive debugging
-- [mcp-csharp-test](../mcp-csharp-test/SKILL.md) — Automated tests and evaluations
+- `mcp-csharp-create` — Create a new MCP server project
+- `mcp-csharp-debug` — Running and interactive debugging
+- `mcp-csharp-test` — Automated tests and evaluations
 
 ## Reference Files
 

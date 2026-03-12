@@ -26,9 +26,9 @@ Run, debug, and interactively test C# MCP servers. Covers local execution, IDE d
 
 ## Stop Signals
 
-- **No project yet?** → Use [mcp-csharp-create](../mcp-csharp-create/SKILL.md) first
-- **Need automated tests?** → Use [mcp-csharp-test](../mcp-csharp-test/SKILL.md)
-- **Production deployment issue?** → Use [mcp-csharp-publish](../mcp-csharp-publish/SKILL.md)
+- **No project yet?** → Use `mcp-csharp-create` first
+- **Need automated tests?** → Use `mcp-csharp-test`
+- **Production deployment issue?** → Use `mcp-csharp-publish`
 
 ## Inputs
 
@@ -221,9 +221,9 @@ public class MyTools(ILogger<MyTools> logger)
 
 ## Related Skills
 
-- [mcp-csharp-create](../mcp-csharp-create/SKILL.md) — Create a new MCP server project
-- [mcp-csharp-test](../mcp-csharp-test/SKILL.md) — Automated tests and evaluations
-- [mcp-csharp-publish](../mcp-csharp-publish/SKILL.md) — NuGet, Docker, Azure deployment
+- `mcp-csharp-create` — Create a new MCP server project
+- `mcp-csharp-test` — Automated tests and evaluations
+- `mcp-csharp-publish` — NuGet, Docker, Azure deployment
 
 ## Reference Files
 
