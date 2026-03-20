@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.FileSystemGlobbing;
 using Microsoft.Extensions.FileSystemGlobbing.Abstractions;
@@ -10,12 +11,13 @@ public static class AssertionEvaluator
     public static async Task<List<AssertionResult>> EvaluateAssertions(
         IReadOnlyList<Assertion> assertions,
         string agentOutput,
-        string workDir)
+        string workDir,
+        int scenarioTimeoutSeconds = 120)
     {
         var results = new List<AssertionResult>();
         foreach (var assertion in assertions)
         {
-            var result = await EvaluateAssertion(assertion, agentOutput, workDir);
+            var result = await EvaluateAssertion(assertion, agentOutput, workDir, scenarioTimeoutSeconds);
             results.Add(result);
         }
         return results;
@@ -84,7 +86,8 @@ public static class AssertionEvaluator
     private static async Task<AssertionResult> EvaluateAssertion(
         Assertion assertion,
         string agentOutput,
-        string workDir)
+        string workDir,
+        int scenarioTimeoutSeconds)
     {
         return assertion.Type switch
         {
@@ -97,6 +100,7 @@ public static class AssertionEvaluator
             AssertionType.OutputMatches => EvalOutputMatches(assertion, agentOutput),
             AssertionType.OutputNotMatches => EvalOutputNotMatches(assertion, agentOutput),
             AssertionType.ExitSuccess => EvalExitSuccess(assertion, agentOutput),
+            AssertionType.RunCommandAndAssert => await EvalRunCommandAndAssert(assertion, workDir, scenarioTimeoutSeconds),
             _ => new AssertionResult(assertion, false, $"Unknown assertion type: {assertion.Type}"),
         };
     }
@@ -234,6 +238,126 @@ public static class AssertionEvaluator
             success
                 ? "Agent completed successfully"
                 : "Agent produced no output");
+    }
+
+    private const int MaxOutputLength = 4096;
+
+    private static string TruncateOutput(string output)
+    {
+        if (output.Length <= MaxOutputLength)
+            return output;
+        return $"{output[..MaxOutputLength]}... [truncated, {output.Length} chars total]";
+    }
+
+    private static async Task<AssertionResult> EvalRunCommandAndAssert(Assertion a, string workDir, int scenarioTimeoutSeconds)
+    {
+        var cmd = a.CommandArgs ?? throw new UnreachableException();
+        var command = cmd.CommandToRun;
+        var timeoutSeconds = cmd.Timeout ?? scenarioTimeoutSeconds;
+
+        if (timeoutSeconds <= 0)
+        {
+            return new AssertionResult(a, false, $"Invalid timeout value {timeoutSeconds}s. Timeout must be greater than 0.");
+        }
+
+        var processStartInfo = new ProcessStartInfo(command, cmd.CommandArguments ?? string.Empty)
+        {
+            WorkingDirectory = workDir,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+        };
+
+        AgentRunner.ScrubSensitiveEnvironment(processStartInfo);
+
+        Process process;
+        try
+        {
+            var started = Process.Start(processStartInfo);
+            if (started is null)
+            {
+                return new AssertionResult(a, false, $"Failed to start process '{command}' {cmd.CommandArguments}");
+            }
+            process = started;
+        }
+        catch (Exception ex)
+        {
+            return new AssertionResult(a, false, $"Failed to start process '{command}' {cmd.CommandArguments}: {ex.Message}");
+        }
+
+        using (process)
+        {
+            var stdOutTask = process.StandardOutput.ReadToEndAsync();
+            var stdErrTask = process.StandardError.ReadToEndAsync();
+
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutSeconds));
+            try
+            {
+                await process.WaitForExitAsync(cts.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                try { process.Kill(entireProcessTree: true); } catch { }
+                return new AssertionResult(a, false, $"Command timed out after {timeoutSeconds}s");
+            }
+
+            var actualStdOut = await stdOutTask;
+            var actualStdErr = await stdErrTask;
+
+            var actualExitCode = process.ExitCode;
+            if (cmd.ExpectedExitCode.HasValue && cmd.ExpectedExitCode.Value != actualExitCode)
+            {
+                return new AssertionResult(a, false, $"Command exited with code {actualExitCode} but expected {cmd.ExpectedExitCode.Value}");
+            }
+
+            if (cmd.ExpectedStdOutContains is not null)
+            {
+                if (!actualStdOut.Contains(cmd.ExpectedStdOutContains, StringComparison.OrdinalIgnoreCase))
+                {
+                    return new AssertionResult(a, false, $"Command stdout did not contain expected value. Stdout: {TruncateOutput(actualStdOut)}");
+                }
+            }
+
+            if (cmd.ExpectedStdOutMatches is not null)
+            {
+                try
+                {
+                    if (!Regex.IsMatch(actualStdOut, cmd.ExpectedStdOutMatches, RegexOptions.IgnoreCase, RegexTimeout))
+                    {
+                        return new AssertionResult(a, false, $"Command stdout did not match pattern '{cmd.ExpectedStdOutMatches}'. Stdout: {TruncateOutput(actualStdOut)}");
+                    }
+                }
+                catch (RegexMatchTimeoutException)
+                {
+                    return new AssertionResult(a, false, $"Regex pattern '{cmd.ExpectedStdOutMatches}' timed out after {RegexTimeout.TotalSeconds}s");
+                }
+            }
+
+            if (cmd.ExpectedStdErrorContains is not null)
+            {
+                if (!actualStdErr.Contains(cmd.ExpectedStdErrorContains, StringComparison.OrdinalIgnoreCase))
+                {
+                    return new AssertionResult(a, false, $"Command stderr did not contain expected value. Stderr: {TruncateOutput(actualStdErr)}");
+                }
+            }
+
+            if (cmd.ExpectedStdErrorMatches is not null)
+            {
+                try
+                {
+                    if (!Regex.IsMatch(actualStdErr, cmd.ExpectedStdErrorMatches, RegexOptions.IgnoreCase, RegexTimeout))
+                    {
+                        return new AssertionResult(a, false, $"Command stderr did not match pattern '{cmd.ExpectedStdErrorMatches}'. Stderr: {TruncateOutput(actualStdErr)}");
+                    }
+                }
+                catch (RegexMatchTimeoutException)
+                {
+                    return new AssertionResult(a, false, $"Regex pattern '{cmd.ExpectedStdErrorMatches}' timed out after {RegexTimeout.TotalSeconds}s");
+                }
+            }
+
+            return new AssertionResult(a, true, string.Empty);
+        }
     }
 
     private static Task<bool> FileExistsGlob(string pattern, string workDir)

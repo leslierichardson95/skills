@@ -84,6 +84,7 @@ public static class EvalSchema
             "output_matches" => AssertionType.OutputMatches,
             "output_not_matches" => AssertionType.OutputNotMatches,
             "exit_success" => AssertionType.ExitSuccess,
+            "run_command_and_assert" => AssertionType.RunCommandAndAssert,
             _ => throw new InvalidOperationException($"Unknown assertion type: {raw.Type}"),
         };
 
@@ -108,10 +109,36 @@ public static class EvalSchema
                 if (string.IsNullOrWhiteSpace(raw.Pattern))
                     throw new InvalidOperationException($"Assertion '{raw.Type}' requires 'pattern'");
                 break;
+            case AssertionType.RunCommandAndAssert:
+                if (string.IsNullOrWhiteSpace(raw.CommandToRun))
+                    throw new InvalidOperationException($"Assertion '{raw.Type}' requires 'command_to_run'");
+
+                if (raw.ExpectedExitCode is null &&
+                    string.IsNullOrWhiteSpace(raw.ExpectedStdOutputContains) &&
+                    string.IsNullOrWhiteSpace(raw.ExpectedStdErrorContains) &&
+                    string.IsNullOrWhiteSpace(raw.ExpectedStdOutputMatches) &&
+                    string.IsNullOrWhiteSpace(raw.ExpectedStdErrorMatches))
+                    throw new InvalidOperationException($"Assertion '{raw.Type}' requires one or more of 'expected_exit_code', 'expected_std_output_contains', 'expected_std_error_contains', 'expected_std_output_matches', or 'expected_std_error_matches'");
+                break;
         }
 
-        return new Assertion(type, raw.Path, raw.Value, raw.Pattern);
+        CommandAssertionArgs? commandArgs = type == AssertionType.RunCommandAndAssert
+            ? new CommandAssertionArgs(
+                raw.CommandToRun!,
+                NullIfWhiteSpace(raw.CommandArguments),
+                raw.ExpectedExitCode,
+                NullIfWhiteSpace(raw.ExpectedStdOutputContains),
+                NullIfWhiteSpace(raw.ExpectedStdErrorContains),
+                NullIfWhiteSpace(raw.ExpectedStdOutputMatches),
+                NullIfWhiteSpace(raw.ExpectedStdErrorMatches),
+                raw.CommandTimeout)
+            : null;
+
+        return new Assertion(type, raw.Path, raw.Value, raw.Pattern, commandArgs);
     }
+
+    private static string? NullIfWhiteSpace(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? null : value;
 
     // Raw YAML deserialization models
 
@@ -176,5 +203,14 @@ public static class EvalSchema
         public string? Path { get; set; }
         public string? Value { get; set; }
         public string? Pattern { get; set; }
+
+        public string? CommandToRun { get; set; }
+        public string? CommandArguments { get; set; }
+        public int? ExpectedExitCode { get; set; }
+        public string? ExpectedStdOutputContains { get; set; }
+        public string? ExpectedStdErrorContains { get; set; }
+        public string? ExpectedStdOutputMatches { get; set; }
+        public string? ExpectedStdErrorMatches { get; set; }
+        public int? CommandTimeout { get; set; }
     }
 }
