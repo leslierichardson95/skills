@@ -23,8 +23,8 @@ Detailed guide for publishing stdio MCP servers as NuGet tool packages.
     <Description>MCP server for interacting with MyService API</Description>
 
     <!-- Metadata -->
-    <PackageProjectUrl>https://github.com/yourusername/mymcpserver</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/yourusername/mymcpserver</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/<yourusername>/<mymcpserver></PackageProjectUrl>
+    <RepositoryUrl>https://github.com/<yourusername>/<mymcpserver></RepositoryUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageTags>mcp;modelcontextprotocol;ai;llm</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
