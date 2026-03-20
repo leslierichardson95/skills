@@ -38,6 +38,7 @@ github.com/dotnet/dotnet-api-docs
 github.com/dotnet/dotnet-docker
 github.com/dotnet/efcore
 github.com/dotnet/maui
+github.com/dotnet/msbuild
 github.com/dotnet/roslyn
 github.com/dotnet/runtime
 github.com/dotnet/sdk
@@ -53,6 +54,10 @@ github.com/microsoftdocs/visualstudio-docs
 github.com/modelcontextprotocol/csharp-sdk
 github.com/modelcontextprotocol/registry
 github.com/open-telemetry/semantic-conventions
+github.com/NuGet/docs.microsoft.com-nuget
+
+# Codex
+developers.openai.com
 
 # Community
 fluentassertions.com

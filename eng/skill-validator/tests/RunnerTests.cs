@@ -13,10 +13,7 @@ public class BuildSessionConfigTests
         Description: "A test skill",
         Path: Path.Combine("C:", "home", "user", "skills", "test-skill"),
         SkillMdPath: Path.Combine("C:", "home", "user", "skills", "test-skill", "SKILL.md"),
-        SkillMdContent: "# Test",
-        EvalPath: null,
-        EvalConfig: null,
-        McpServers: null);
+        SkillMdContent: "# Test");
 
     [Fact]
     public void SetsSkillDirectoriesToStagedIsolationDir()
@@ -29,6 +26,137 @@ public class BuildSessionConfigTests
         Assert.StartsWith(Path.GetTempPath(), stageDir);
         var stagedSkillDir = Path.Combine(stageDir, Path.GetFileName(MockSkill.Path));
         Assert.True(File.Exists(Path.Combine(stagedSkillDir, "SKILL.md")));
+    }
+
+    [Fact]
+    public async Task IsolationStageCopiesReferencesAndScripts()
+    {
+        // Create a real skill directory with references/ and scripts/ subdirectories
+        var tmpBase = Path.Combine(Path.GetTempPath(), $"sv-test-{Guid.NewGuid():N}");
+        var skillDir = Path.Combine(tmpBase, "skills", "my-skill");
+        var refsDir = Path.Combine(skillDir, "references");
+        var scriptsDir = Path.Combine(skillDir, "scripts");
+        Directory.CreateDirectory(refsDir);
+        Directory.CreateDirectory(scriptsDir);
+        File.WriteAllText(Path.Combine(skillDir, "SKILL.md"), "# My Skill");
+        File.WriteAllText(Path.Combine(refsDir, "patterns.md"), "# Patterns");
+        File.WriteAllText(Path.Combine(scriptsDir, "Run.ps1"), "Write-Host 'hi'");
+
+        try
+        {
+            var skill = new SkillInfo("my-skill", "A skill", skillDir,
+                Path.Combine(skillDir, "SKILL.md"), "# My Skill (transformed)");
+
+            var config = AgentRunner.BuildSessionConfig(skill, null, "gpt-4.1", "C:\\tmp\\work");
+
+            var stageDir = config.SkillDirectories![0];
+            var stagedSkillDir = Path.Combine(stageDir, "my-skill");
+
+            // SKILL.md should use in-memory content (may be transformed)
+            Assert.Equal("# My Skill (transformed)", File.ReadAllText(Path.Combine(stagedSkillDir, "SKILL.md")));
+            // references/ and scripts/ should be copied
+            Assert.True(File.Exists(Path.Combine(stagedSkillDir, "references", "patterns.md")));
+            Assert.Equal("# Patterns", File.ReadAllText(Path.Combine(stagedSkillDir, "references", "patterns.md")));
+            Assert.True(File.Exists(Path.Combine(stagedSkillDir, "scripts", "Run.ps1")));
+        }
+        finally
+        {
+            try { Directory.Delete(tmpBase, true); } catch { }
+            try { await AgentRunner.CleanupWorkDirs(); } catch { }
+        }
+    }
+
+    [Fact]
+    public async Task IsolatedStagingDoesNotExposeOriginalOrSiblingSkills()
+    {
+        // Create a skills root with a target skill and a sibling skill
+        var tmpBase = Path.Combine(Path.GetTempPath(), $"sv-iso-test-{Guid.NewGuid():N}");
+        var skillsRoot = Path.Combine(tmpBase, "skills");
+        var targetSkillDir = Path.Combine(skillsRoot, "my-skill");
+        var siblingSkillDir = Path.Combine(skillsRoot, "sibling-skill");
+
+        Directory.CreateDirectory(targetSkillDir);
+        Directory.CreateDirectory(siblingSkillDir);
+
+        File.WriteAllText(Path.Combine(targetSkillDir, "SKILL.md"), "# My Skill");
+        File.WriteAllText(Path.Combine(siblingSkillDir, "SKILL.md"), "# Sibling Skill");
+
+        try
+        {
+            var skill = new SkillInfo(
+                "my-skill",
+                "A skill",
+                targetSkillDir,
+                Path.Combine(targetSkillDir, "SKILL.md"),
+                "# My Skill (transformed)");
+
+            var config = AgentRunner.BuildSessionConfig(skill, null, "gpt-4.1", "C:\\tmp\\work");
+
+            // Only a staged isolation directory should be exposed.
+            Assert.NotNull(config.SkillDirectories);
+            Assert.Single(config.SkillDirectories!);
+
+            var stageDir = config.SkillDirectories![0];
+            Assert.StartsWith(Path.GetTempPath(), stageDir);
+
+            var stagedTargetDir = Path.Combine(stageDir, "my-skill");
+            var stagedSiblingDir = Path.Combine(stageDir, "sibling-skill");
+
+            // The target skill should be available in the staged directory.
+            Assert.True(Directory.Exists(stagedTargetDir));
+
+            // The sibling skill from the original skills root must not be exposed in isolation.
+            Assert.False(Directory.Exists(stagedSiblingDir));
+
+            // Permission check should deny access to the original skill directory
+            var workDir = Path.GetFullPath(Path.Combine(Path.GetTempPath(), "work"));
+            var originalSkillFilePath = Path.Combine(targetSkillDir, "SKILL.md");
+            var escaped = originalSkillFilePath.Replace("\\", "\\\\");
+            var req = System.Text.Json.JsonSerializer.Deserialize<GitHub.Copilot.SDK.PermissionRequest>(
+                $"{{\"kind\":\"read\",\"path\":\"{escaped}\"}}")!;
+            var denied = AgentRunner.CheckPermission(req, workDir, null, log: null);
+            Assert.False(denied);
+        }
+        finally
+        {
+            try { Directory.Delete(tmpBase, true); } catch { }
+            try { await AgentRunner.CleanupWorkDirs(); } catch { }
+        }
+    }
+
+    [Fact]
+    public async Task AdditionalSkillsStageCopiesReferencesDir()
+    {
+        // Create a noise skill with references
+        var tmpBase = Path.Combine(Path.GetTempPath(), $"sv-test-{Guid.NewGuid():N}");
+        var noiseSkillDir = Path.Combine(tmpBase, "plugin-x", "skills", "noise-skill");
+        var refsDir = Path.Combine(noiseSkillDir, "references");
+        Directory.CreateDirectory(refsDir);
+        File.WriteAllText(Path.Combine(noiseSkillDir, "SKILL.md"), "# Noise");
+        File.WriteAllText(Path.Combine(refsDir, "guide.md"), "# Guide");
+
+        try
+        {
+            var additionalSkills = new[]
+            {
+                new SkillInfo("noise-skill", "Noise", noiseSkillDir,
+                    Path.Combine(noiseSkillDir, "SKILL.md"), "# Noise"),
+            };
+
+            var config = AgentRunner.BuildSessionConfig(MockSkill, pluginRoot: null, "gpt-4.1", "C:\\tmp\\work",
+                additionalSkills: additionalSkills);
+
+            var noiseStageDir = config.SkillDirectories![1];
+            var stagedNoiseSkill = Path.Combine(noiseStageDir, "noise-skill");
+            Assert.True(File.Exists(Path.Combine(stagedNoiseSkill, "SKILL.md")));
+            Assert.True(File.Exists(Path.Combine(stagedNoiseSkill, "references", "guide.md")));
+            Assert.Equal("# Guide", File.ReadAllText(Path.Combine(stagedNoiseSkill, "references", "guide.md")));
+        }
+        finally
+        {
+            try { Directory.Delete(tmpBase, true); } catch { }
+            try { await AgentRunner.CleanupWorkDirs(); } catch { }
+        }
     }
 
     [Fact]
@@ -50,9 +178,9 @@ public class BuildSessionConfigTests
         {
             var additionalSkills = new[]
             {
-                new SkillInfo("skill-a", "A", skillADir, Path.Combine(skillADir, "SKILL.md"), "# A", null, null),
-                new SkillInfo("skill-b", "B", skillBDir, Path.Combine(skillBDir, "SKILL.md"), "# B", null, null),
-                new SkillInfo("no-skill", "None", noSkillDir, Path.Combine(noSkillDir, "SKILL.md"), "", null, null),
+                new SkillInfo("skill-a", "A", skillADir, Path.Combine(skillADir, "SKILL.md"), "# A"),
+                new SkillInfo("skill-b", "B", skillBDir, Path.Combine(skillBDir, "SKILL.md"), "# B"),
+                new SkillInfo("no-skill", "None", noSkillDir, Path.Combine(noSkillDir, "SKILL.md"), ""),
             };
 
             var config = AgentRunner.BuildSessionConfig(MockSkill, pluginRoot: null, "gpt-4.1", "C:\\tmp\\work",
@@ -576,6 +704,16 @@ public class CheckPermissionTests
     }
 
     [Fact]
+    public void ApprovesPathsInsideAdditionalAllowedDirs()
+    {
+        var stagingDir = Path.GetFullPath(Path.Combine(Path.GetTempPath(), "sv-iso-abc123", "my-skill"));
+        var refPath = Path.Combine(stagingDir, "references", "guide.md");
+        var result = AgentRunner.CheckPermission(MakePathRequest(refPath), WorkDir, null, log: null,
+            additionalAllowedDirs: [stagingDir]);
+        Assert.True(result);
+    }
+
+    [Fact]
     public void DeniesPathsOutsideAllowedDirectories()
     {
         var outsidePath = Path.GetFullPath(Path.Combine(Path.GetTempPath(), "secret", "config"));
@@ -651,5 +789,98 @@ public class CheckPermissionTests
         var req = MakeRequest("{\"kind\":\"other\",\"skill\":\"binlog-failure-analysis\"}");
         var result = AgentRunner.CheckPermission(req, WorkDir, null, log: null);
         Assert.True(result);
+    }
+}
+
+public class ResolveSourcePathTests
+{
+    [Fact]
+    public void ResolvesRelativeToEvalDirectory()
+    {
+        // Create a temp directory with a fixture file
+        var tmpDir = Path.Combine(Path.GetTempPath(), $"sv-test-{Guid.NewGuid():N}");
+        var fixturesDir = Path.Combine(tmpDir, "fixtures");
+        Directory.CreateDirectory(fixturesDir);
+        var fixtureFile = Path.Combine(fixturesDir, "test.txt");
+        File.WriteAllText(fixtureFile, "test");
+        try
+        {
+            var evalPath = Path.Combine(tmpDir, "eval.yaml");
+            var result = AgentRunner.ResolveSourcePath("fixtures/test.txt", evalPath, skillPath: null);
+            Assert.NotNull(result);
+            Assert.Equal(Path.GetFullPath(fixtureFile), result);
+        }
+        finally
+        {
+            Directory.Delete(tmpDir, true);
+        }
+    }
+
+    [Fact]
+    public void FallsBackToSkillPathWhenEvalPathIsNull()
+    {
+        var tmpDir = Path.Combine(Path.GetTempPath(), $"sv-test-{Guid.NewGuid():N}");
+        var fixturesDir = Path.Combine(tmpDir, "fixtures");
+        Directory.CreateDirectory(fixturesDir);
+        var fixtureFile = Path.Combine(fixturesDir, "data.cs");
+        File.WriteAllText(fixtureFile, "// code");
+        try
+        {
+            var result = AgentRunner.ResolveSourcePath("fixtures/data.cs", evalPath: null, skillPath: tmpDir);
+            Assert.NotNull(result);
+            Assert.Equal(Path.GetFullPath(fixtureFile), result);
+        }
+        finally
+        {
+            Directory.Delete(tmpDir, true);
+        }
+    }
+
+    [Fact]
+    public void ReturnsNullWhenBothPathsAreNull()
+    {
+        var result = AgentRunner.ResolveSourcePath("fixtures/test.txt", evalPath: null, skillPath: null);
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public void RejectsPathTraversal()
+    {
+        var tmpDir = Path.Combine(Path.GetTempPath(), $"sv-test-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tmpDir);
+        try
+        {
+            var evalPath = Path.Combine(tmpDir, "eval.yaml");
+            var result = AgentRunner.ResolveSourcePath("../../etc/passwd", evalPath, skillPath: null);
+            Assert.Null(result);
+        }
+        finally
+        {
+            Directory.Delete(tmpDir, true);
+        }
+    }
+
+    [Fact]
+    public void PrefersEvalPathOverSkillPath()
+    {
+        var evalDir = Path.Combine(Path.GetTempPath(), $"sv-eval-{Guid.NewGuid():N}");
+        var skillDir = Path.Combine(Path.GetTempPath(), $"sv-skill-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(Path.Combine(evalDir, "fixtures"));
+        Directory.CreateDirectory(Path.Combine(skillDir, "fixtures"));
+        File.WriteAllText(Path.Combine(evalDir, "fixtures", "f.txt"), "eval");
+        File.WriteAllText(Path.Combine(skillDir, "fixtures", "f.txt"), "skill");
+        try
+        {
+            var evalPath = Path.Combine(evalDir, "eval.yaml");
+            var result = AgentRunner.ResolveSourcePath("fixtures/f.txt", evalPath, skillPath: skillDir);
+            Assert.NotNull(result);
+            // Should resolve to eval directory, not skill directory
+            Assert.StartsWith(Path.GetFullPath(evalDir), result);
+        }
+        finally
+        {
+            Directory.Delete(evalDir, true);
+            Directory.Delete(skillDir, true);
+        }
     }
 }
