@@ -24,17 +24,17 @@
 
 /plugins/dotnet/agents/optimizing-dotnet-performance.agent.md @dotnet/appmodel
 
-/plugins/dotnet/skills/mcp-csharp-create/ @leslierichardson95 @artl93
-/tests/dotnet/mcp-csharp-create/ @leslierichardson95 @artl93
+/plugins/dotnet-ai/skills/mcp-csharp-create/ @leslierichardson95 @artl93
+/tests/dotnet-ai/mcp-csharp-create/ @leslierichardson95 @artl93
 
-/plugins/dotnet/skills/mcp-csharp-debug/ @leslierichardson95 @artl93
-/tests/dotnet/mcp-csharp-debug/ @leslierichardson95 @artl93
+/plugins/dotnet-ai/skills/mcp-csharp-debug/ @leslierichardson95 @artl93
+/tests/dotnet-ai/mcp-csharp-debug/ @leslierichardson95 @artl93
 
-/plugins/dotnet/skills/mcp-csharp-publish/ @leslierichardson95 @artl93
-/tests/dotnet/mcp-csharp-publish/ @leslierichardson95 @artl93
+/plugins/dotnet-ai/skills/mcp-csharp-publish/ @leslierichardson95 @artl93
+/tests/dotnet-ai/mcp-csharp-publish/ @leslierichardson95 @artl93
 
-/plugins/dotnet/skills/mcp-csharp-test/ @leslierichardson95 @artl93
-/tests/dotnet/mcp-csharp-test/ @leslierichardson95 @artl93
+/plugins/dotnet-ai/skills/mcp-csharp-test/ @leslierichardson95 @artl93
+/tests/dotnet-ai/mcp-csharp-test/ @leslierichardson95 @artl93
 
 # dotnet-upgrade (migrating and upgrading .NET projects)
 /plugins/dotnet-upgrade/skills/thread-abort-migration/ @dotnet/appmodel
@@ -83,10 +83,23 @@
 /plugins/dotnet-data/skills/optimizing-ef-core-queries/ @dotnet/efteam
 /tests/dotnet-data/optimizing-ef-core-queries/ @dotnet/efteam
 
-# dotnet-test (test execution, filtering, platform detection)
-/plugins/dotnet-test/skills/run-tests/ @Evangelink @JanKrivanek
-/tests/dotnet-test/run-tests/ @Evangelink @JanKrivanek
+# dotnet-test (everything testing related)
+/plugins/dotnet-test/ @dotnet/dotnet-testing
+/tests/dotnet-test/ @dotnet/dotnet-testing
+
+# dotnet-test-experimental (experimental test quality skills)
+/plugins/dotnet-test-experimental/ @dotnet/dotnet-testing
+/tests/dotnet-test-experimental/ @dotnet/dotnet-testing
 
 # dotnet-maui
 /plugins/dotnet-maui/ @Redth @jfversluis
 /tests/dotnet-maui/ @Redth @jfversluis
+
+# dotnet-template-engine
+/plugins/dotnet-template-engine/ @YuliiaKovalova @JanKrivanek
+/tests/dotnet-template-engine/ @YuliiaKovalova @JanKrivanek
+
+# dotnet-nuget (package and dependency management)
+/plugins/dotnet-nuget/ @dotnet/area-infrastructure-libraries @kartheekp-ms
+/tests/dotnet-nuget/ @dotnet/area-infrastructure-libraries @kartheekp-ms
+

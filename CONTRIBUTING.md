@@ -84,8 +84,9 @@ See existing plugins for the expected format.
 
 We are most likely to accept contributions that are:
 
+- Addresses a LLM gap and is clearly motivated by a real use case
+- Likely to be used frequently and is general (not repo-specific)
 - Narrow in scope and easy to review
-- Clearly motivated by a real use case
 - Tool conscious and explicit about assumptions
 - Verifiable with concrete validation steps
 - Written to be durable across repo changes
@@ -100,9 +101,13 @@ We are less likely to accept contributions that:
 
 ## Proposing a new skill
 
+Please review the **What we look for** section and add justification for the skill in your issue and PR.
+
 A skill should be self-contained and:
 
 - Clearly state **what it does** and **when to use it**.
+- Frontmatter (name and description) is small and minimal, just enough for LLM to understand when to use it
+- Keep the SKILL.md body under 500 lines for optimal performance. Split content into separate files when you approach this limit. Use a progressive disclosure pattern, referring to those files from the SKILL.md file where needed.
 - Specify required inputs (repo context, environment, access needs).
 - Prefer concrete checklists and verification steps over vague guidance.
 
@@ -261,19 +266,19 @@ Prerequisites: .NET 10 SDK or later and `gh auth login`.
 
 ```bash
 # Run tests for a single plugin
-dotnet run --project eng/skill-validator/src/SkillValidator.csproj --tests-dir tests/dotnet-msbuild plugins/dotnet-msbuild/skills
+dotnet run --project eng/skill-validator/src/SkillValidator.csproj -- evaluate --tests-dir tests/dotnet-msbuild plugins/dotnet-msbuild/skills
 
 # Run tests for a single skill (pass the skill directory directly)
-dotnet run --project eng/skill-validator/src/SkillValidator.csproj --tests-dir tests/dotnet-msbuild plugins/dotnet-msbuild/skills/common-build-errors
+dotnet run --project eng/skill-validator/src/SkillValidator.csproj -- evaluate --tests-dir tests/dotnet-msbuild plugins/dotnet-msbuild/skills/common-build-errors
 
 # Fewer runs for faster iteration (default is 5)
-dotnet run --project eng/skill-validator/src/SkillValidator.csproj --runs 3 --tests-dir tests/dotnet-msbuild plugins/dotnet-msbuild/skills
+dotnet run --project eng/skill-validator/src/SkillValidator.csproj -- evaluate --runs 3 --tests-dir tests/dotnet-msbuild plugins/dotnet-msbuild/skills
 
 # Use a specific model
-dotnet run --project eng/skill-validator/src/SkillValidator.csproj --model claude-opus-4.6 --tests-dir tests/dotnet-msbuild plugins/dotnet-msbuild/skills
+dotnet run --project eng/skill-validator/src/SkillValidator.csproj -- evaluate --model claude-opus-4.6 --tests-dir tests/dotnet-msbuild plugins/dotnet-msbuild/skills
 
 # Run with verbose logging
-dotnet run --project eng/skill-validator/src/SkillValidator.csproj --tests-dir tests/dotnet-msbuild plugins/dotnet-msbuild/skills --verbose
+dotnet run --project eng/skill-validator/src/SkillValidator.csproj -- evaluate --verbose --tests-dir tests/dotnet-msbuild plugins/dotnet-msbuild/skills
 ```
 
 > [!WARNING]  

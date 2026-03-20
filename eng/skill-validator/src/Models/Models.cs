@@ -70,7 +70,10 @@ public sealed record EvalScenario(
     int? MaxTokens = null,
     bool ExpectActivation = true);
 
-public sealed record EvalConfig(IReadOnlyList<EvalScenario> Scenarios);
+public sealed record EvalConfig(
+    IReadOnlyList<EvalScenario> Scenarios,
+    int? MaxParallelScenarios = null,
+    int? MaxParallelRuns = null);
 
 // --- Skill info ---
 
@@ -80,10 +83,17 @@ public sealed record SkillInfo(
     string Path,
     string SkillMdPath,
     string SkillMdContent,
+    string? Compatibility = null);
+
+/// <summary>
+/// Extends SkillInfo with evaluation-specific data (eval.yaml config, MCP servers).
+/// Used only by the eval command and its supporting services.
+/// </summary>
+public sealed record EvalSkillInfo(
+    SkillInfo Skill,
     string? EvalPath,
     EvalConfig? EvalConfig,
-    IReadOnlyDictionary<string, MCPServerDef>? McpServers = null,
-    string? Compatibility = null);
+    IReadOnlyDictionary<string, MCPServerDef>? McpServers = null);
 
 // --- Agent info ---
 
@@ -107,8 +117,8 @@ public sealed record PluginInfo(
     string Name,
     string? Version,
     string? Description,
-    string? SkillsPath,
-    string? AgentsPath,
+    IReadOnlyList<string> SkillPaths,
+    IReadOnlyList<string> AgentPaths,
     string DirectoryPath,
     string DirectoryName);
 
@@ -137,11 +147,31 @@ public sealed record JudgeResult(
     double OverallScore,
     string OverallReasoning);
 
+/// <summary>Lightweight token counter returned by judge helpers.</summary>
+public sealed record TokenUsage(int InputTokens, int OutputTokens, int CacheReadTokens, int CacheWriteTokens)
+{
+    public static TokenUsage Zero { get; } = new(0, 0, 0, 0);
+
+    public static TokenUsage operator +(TokenUsage a, TokenUsage b) =>
+        new(a.InputTokens + b.InputTokens,
+            a.OutputTokens + b.OutputTokens,
+            a.CacheReadTokens + b.CacheReadTokens,
+            a.CacheWriteTokens + b.CacheWriteTokens);
+}
+
 // --- Run metrics ---
 
 public sealed class RunMetrics
 {
     public int TokenEstimate { get; set; }
+    public int InputTokens { get; set; }
+    public int OutputTokens { get; set; }
+    public int CacheReadTokens { get; set; }
+    public int CacheWriteTokens { get; set; }
+    public int JudgeInputTokens { get; set; }
+    public int JudgeOutputTokens { get; set; }
+    public int JudgeCacheReadTokens { get; set; }
+    public int JudgeCacheWriteTokens { get; set; }
     public int ToolCallCount { get; set; }
     public Dictionary<string, int> ToolCallBreakdown { get; set; } = new();
     public int TurnCount { get; set; }
@@ -344,6 +374,15 @@ public sealed record NoiseTestResult(
 
 // --- Config ---
 
+public sealed record CheckConfig
+{
+    public IReadOnlyList<string> PluginPaths { get; init; } = [];
+    public IReadOnlyList<string> SkillPaths { get; init; } = [];
+    public IReadOnlyList<string> AgentPaths { get; init; } = [];
+    public string? AllowedExternalDepsFile { get; init; }
+    public bool Verbose { get; init; }
+}
+
 public sealed record ReporterSpec(ReporterType Type);
 
 public enum ReporterType
@@ -358,7 +397,6 @@ public sealed record ValidatorConfig
 {
     public double MinImprovement { get; init; } = 0.1;
     public bool RequireCompletion { get; init; } = true;
-    public bool RequireEvals { get; init; }
     public bool Verbose { get; init; }
     public string Model { get; init; } = "claude-opus-4.6";
     public string JudgeModel { get; init; } = "claude-opus-4.6";
@@ -376,6 +414,7 @@ public sealed record ValidatorConfig
     public string? TestsDir { get; init; }
     public bool OverfittingCheck { get; init; } = true;
     public bool OverfittingFix { get; init; }
+    public bool KeepSessions { get; init; }
     public string? NoiseSkillsDir { get; init; }
     public double NoiseDegradationLimit { get; init; } = 0.2;
     public double NoiseMaxScenarioDegradation { get; init; } = 0.4;
