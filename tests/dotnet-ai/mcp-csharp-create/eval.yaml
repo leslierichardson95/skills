@@ -7,13 +7,11 @@ scenarios:
       with stdio transport, and explain how DI works for MCP tools.
     assertions:
       - type: "output_matches"
-        pattern: "\\[McpServerToolType\\]"
-      - type: "output_matches"
         pattern: "\\[McpServerTool[\\],\\(]"
       - type: "output_matches"
         pattern: "(AddHttpClient|HttpClient)"
     rubric:
-      - "Shows a tool class with [McpServerToolType] and [McpServerTool] attributes"
+      - "Shows a tool class with [McpServerTool] attributes"
       - "Injects HttpClient via DI (constructor injection or method parameter injection)"
       - "Includes [Description] attributes on both the method and all parameters"
       - "Configures Program.cs with AddMcpServer, WithStdioServerTransport, and logging to stderr"
@@ -35,7 +33,7 @@ scenarios:
       - "Configures HTTP transport with WithHttpTransport() and references ModelContextProtocol.AspNetCore"
       - "Includes MapMcp() in the endpoint configuration"
       - "Shows a resource class with [McpServerResourceType] and [McpServerResource] attributes including UriTemplate"
-      - "Shows how to register tools and resources with WithToolsFromAssembly or similar DI registration"
+      - "Shows how to register tools and resources with WithTools<T> or similar DI registration"
     timeout: 180
   - name: "Create an MCP server with tools, prompts, and proper logging"
     prompt: |
@@ -51,7 +49,7 @@ scenarios:
       - type: "output_matches"
         pattern: "(LogToStandardErrorThreshold|stderr)"
     rubric:
-      - "Shows a tool class with [McpServerToolType]/[McpServerTool] and HttpClient injected via DI"
+      - "Shows a tool class with [McpServerTool] and HttpClient injected via DI"
       - "Shows a prompt class with [McpServerPromptType] and [McpServerPrompt] returning ChatMessage"
       - "Configures logging to stderr (LogToStandardErrorThreshold) to avoid corrupting stdio transport"
       - "Adds [Description] attributes on tools, parameters, and prompts for LLM discoverability"
