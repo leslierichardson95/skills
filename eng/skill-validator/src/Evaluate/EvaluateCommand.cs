@@ -1063,7 +1063,8 @@ public static class EvaluateCommand
             r.SkilledIsolated.Metrics.TimedOut ||
             r.SkilledPlugin.Metrics.TimedOut);
 
-        // Propagate expect_activation from scenario config
+        // Propagate timeout and expect_activation from scenario config
+        comparison.TimeoutSeconds = scenario.Timeout;
         comparison.ExpectActivation = scenario.ExpectActivation;
 
         return comparison;
