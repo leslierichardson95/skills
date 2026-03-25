@@ -5,7 +5,8 @@ description: >
   tests using the MCP client SDK.
   USE FOR: unit testing MCP tool methods, integration testing with in-memory MCP
   client/server, end-to-end testing via MCP protocol,
-  testing HTTP MCP servers with WebApplicationFactory, mocking dependencies in tool tests.
+  testing HTTP MCP servers with WebApplicationFactory, mocking dependencies in tool tests,
+  creating evaluations for MCP servers, writing eval questions, measuring tool quality.
   DO NOT USE FOR: testing MCP clients (this is server testing only), load or performance
   testing, testing non-.NET MCP servers, debugging server issues (use mcp-csharp-debug).
 ---
@@ -146,6 +147,15 @@ dotnet test --filter "FullyQualifiedName~MyToolTests"
 dotnet test --collect:"XPlat Code Coverage"
 ```
 
+### Step 5: Write evaluations
+
+Evaluations measure how well an LLM uses your tools. Good evaluation questions should be:
+- **Read-only and non-destructive** — never modify data as a side effect
+- **Deterministic** — have a single verifiable correct answer
+- **Multi-step** — require the LLM to call multiple tools or reason across results
+
+For the evaluation format, example questions, and detailed guidance, see [references/evaluations.md](references/evaluations.md).
+
 ## Validation
 
 - [ ] Unit tests cover all tool methods, including edge cases
@@ -173,6 +183,7 @@ dotnet test --collect:"XPlat Code Coverage"
 ## Reference Files
 
 - [references/test-patterns.md](references/test-patterns.md) — Complete test code examples: `ClientServerTestBase` in-memory pattern, `WebApplicationFactory` for HTTP, `MockHttpMessageHandler` helper, test categorization, coverage reporting. **Load when:** writing integration tests or need detailed mock patterns.
+- [references/evaluations.md](references/evaluations.md) — Evaluation format, question design principles, and example eval questions. **Load when:** user asks about evaluations, eval questions, or measuring tool quality.
 
 ## More Info
 

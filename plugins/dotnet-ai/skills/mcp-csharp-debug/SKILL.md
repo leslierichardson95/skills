@@ -107,13 +107,7 @@ npx @modelcontextprotocol/inspector dotnet run --project <path/to/ProjectFile.cs
 2. Run Inspector: `npx @modelcontextprotocol/inspector`
 3. Connect to `http://localhost:3001`
 
-**Inspector capabilities:**
-- List all registered tools, prompts, and resources
-- Call tools with custom parameters and see results
-- View request/response JSON-RPC messages
-- Inspect tool schemas and descriptions
-
-**For detailed Inspector usage and troubleshooting**, see [references/mcp-inspector.md](references/mcp-inspector.md).
+**For detailed Inspector capabilities, usage, and troubleshooting**, see [references/mcp-inspector.md](references/mcp-inspector.md).
 
 ### Step 4: Test with GitHub Copilot Agent Mode
 
@@ -130,29 +124,14 @@ npx @modelcontextprotocol/inspector dotnet run --project <path/to/ProjectFile.cs
    ```
    Then restart the MCP server (click Stop → Start in VS Code, or restart `dotnet run`).
 
-2. **Check `[McpServerToolType]` on the class:**
-   ```csharp
-   [McpServerToolType]  // ← Required on the class
-   public class MyTools { ... }
-   ```
+2. **Check attributes and registration:**
+   - Verify `[McpServerToolType]` on the class and `[McpServerTool]` on each public method
+   - Methods can be `static` or instance (instance types need DI registration)
+   - Verify `.WithTools<T>()` or `.WithToolsFromAssembly()` in Program.cs
 
-3. **Check `[McpServerTool]` on each tool method:**
-   - The method must be `public`.
-   - It can be `static` or instance. For instance methods, ensure the containing type is discoverable/registered (for example via `WithTools<MyTools>()` or `WithToolsFromAssembly()`) so DI can construct it.
-   ```csharp
-   [McpServerTool, Description("Does something")]
-   public string DoSomething(string input) => input;
-   ```
+3. **Check `mcp.json`** points to the correct project path
 
-4. **Verify tool registration in Program.cs** — use one of:
-   ```csharp
-   .WithTools<MyTools>()           // register specific class
-   .WithToolsFromAssembly()        // scan entire assembly for [McpServerToolType]
-   ```
-
-5. **Check `mcp.json`** points to the correct project path
-
-6. If still not appearing, reference the tool explicitly: `Using #tool_name, do X`
+4. If still not appearing, reference the tool explicitly: `Using #tool_name, do X`
 
 ### Step 5: Set up breakpoint debugging
 
@@ -165,6 +144,24 @@ npx @modelcontextprotocol/inspector dotnet run --project <path/to/ProjectFile.cs
 
 **Critical:** Build in Debug configuration. Breakpoints won't hit in Release builds.
 
+### Diagnosing Tool Errors
+
+When a tool works standalone but fails through MCP, work through these checks:
+
+1. **Check the MCP output channel** — In VS Code: View → Output → select your MCP server name. Shows protocol errors and server stderr. In Visual Studio: check the Output window for MCP-related messages.
+2. **Attach a debugger** — Set a breakpoint in the failing tool method and step through execution (see Step 5). Check for exceptions being swallowed or unexpected parameter values.
+3. **Test with MCP Inspector** — Call the tool directly through Inspector to isolate whether the issue is in the tool code or the client integration: `npx @modelcontextprotocol/inspector dotnet run --project <path>`
+4. **Check stdout contamination (stdio only)** — Any `Console.WriteLine()` or logging to stdout corrupts the JSON-RPC protocol. Redirect all output to stderr (see Step 6).
+5. **Check common culprits:**
+   - **Serialization errors** — Return types must be JSON-serializable. Avoid circular references.
+   - **DI registration** — Missing service registrations cause runtime exceptions. Check `Program.cs`.
+   - **Parameter binding** — Ensure parameter names and types match the tool schema.
+   - **Unhandled exceptions** — Wrap tool logic in try-catch and log to stderr or a file.
+6. **Enable file logging** — For post-mortem analysis, log to a file:
+   ```csharp
+   builder.Logging.AddFile("mcp-debug.log"); // or use Serilog/NLog
+   ```
+
 ### Step 6: Configure logging
 
 **Critical for stdio transport:** Any output to stdout (including `Console.WriteLine`) **corrupts the MCP JSON-RPC protocol** and causes garbled responses or crashes. All logging and diagnostic output must go to stderr.
@@ -175,27 +172,9 @@ builder.Logging.AddConsole(options =>
     options.LogToStandardErrorThreshold = LogLevel.Trace);
 ```
 
-**HTTP transport** — standard console logging:
-```csharp
-builder.Logging.ClearProviders();
-builder.Logging.AddConsole();
-builder.Logging.SetMinimumLevel(
-    builder.Environment.IsDevelopment() ? LogLevel.Debug : LogLevel.Information);
-```
+**HTTP transport** — For HTTP transport logging configuration, see [references/ide-config.md](references/ide-config.md).
 
-**In tool methods** — inject `ILogger<T>` via constructor:
-```csharp
-[McpServerToolType]
-public class MyTools(ILogger<MyTools> logger)
-{
-    [McpServerTool, Description("Processes data")]
-    public string ProcessData(string input)
-    {
-        logger.LogDebug("Processing: {Input}", input);
-        return DoProcessing(input);
-    }
-}
-```
+**In tool methods** — inject `ILogger<T>` via constructor and use `logger.LogDebug()` / `logger.LogError()`. Logging through `ILogger` respects the stderr configuration above.
 
 ## Validation
 
@@ -210,14 +189,12 @@ public class MyTools(ILogger<MyTools> logger)
 
 | Pitfall | Solution |
 |---------|----------|
-| Tools not appearing in Copilot or Inspector | **Rebuild first:** `dotnet build`, then restart the server. If still missing, verify `[McpServerToolType]` on class, `[McpServerTool]` on methods, and `WithTools<T>()` or `WithToolsFromAssembly()` in Program.cs |
+| Tools not appearing or stale after changes | **Rebuild first:** `dotnet build`, then restart the server. If still missing, verify `[McpServerToolType]` on class, `[McpServerTool]` on methods, and `WithTools<T>()` or `WithToolsFromAssembly()` in Program.cs |
 | stdio server produces garbled output | `Console.WriteLine()` or logging is writing to stdout. All output **must** go to stderr. Set `LogToStandardErrorThreshold = LogLevel.Trace` on the console logger |
-| "Command not found" when starting server | .NET 10+ SDK not installed. Check with `dotnet --version` |
 | HTTP server returns 404 at MCP endpoint | Missing `app.MapMcp()` in Program.cs |
 | Breakpoints not hit | Building in Release mode. Rebuild in Debug: `dotnet build -c Debug`, then restart |
 | Environment variables not passed to server | Add `"env"` section to `mcp.json`. For secrets in VS Code, use `"${input:var_id}"` syntax |
 | MCP Inspector can't connect to HTTP server | Server not running, or wrong port. Check `dotnet run` output for the listening URL |
-| Stale tools after code changes | Always `dotnet build` and restart the server after changing tool methods or attributes |
 
 ## Related Skills
 

@@ -71,31 +71,9 @@ npx @modelcontextprotocol/inspector ./Program.cs
 
 ## Troubleshooting
 
-### Inspector won't start
-
-- Verify Node.js is installed: `node --version`
-- Try clearing npx cache: `npx clear-npx-cache` then retry
-
-### Can't connect to stdio server
-
-- Verify the server builds: `dotnet build` (fix errors first)
-- Check that the server doesn't write to stdout (logging must go to stderr for stdio transport)
-- Try running the server directly first: `dotnet run` — if it hangs waiting for input, that's correct
-
-### Can't connect to HTTP server
-
-- Verify the server is running and the port is correct
-- Check firewall/proxy settings
-- Try `curl http://localhost:<port>/` to verify basic connectivity
-
-### Tools not appearing
-
-- Verify `[McpServerToolType]` and `[McpServerTool]` attributes are present
-- Check `.WithToolsFromAssembly()` or `.WithTools<T>()` in Program.cs
-- Rebuild the project and retry
-
-### Tool call returns error
-
-- Check the Inspector's protocol view for the full error message
-- Common issues: missing required parameters, serialization errors, unhandled exceptions in tool code
-- Add logging to the tool method and check stderr output (stdio) or console output (HTTP)
+| Problem | Checks |
+|---------|--------|
+| Inspector won't start | Verify Node.js is installed (`node --version`). Try clearing npx cache: `npx clear-npx-cache`. |
+| Can't connect to stdio server | Verify server builds (`dotnet build`). Check no stdout writes (logging must go to stderr). Run `dotnet run` directly — hanging for input is correct. |
+| Can't connect to HTTP server | Verify server is running and port is correct. Check firewall/proxy. Test with `curl http://localhost:<port>/`. |
+| Tool call returns error | Check Inspector's protocol view for full error. Common issues: missing required parameters, serialization errors, unhandled exceptions. Add logging and check stderr (stdio) or console (HTTP). |

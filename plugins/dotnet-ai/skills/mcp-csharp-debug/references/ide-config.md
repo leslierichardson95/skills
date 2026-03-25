@@ -151,3 +151,18 @@ New-Item -ItemType Directory -Path $configDir -Force | Out-Null
 $config | ConvertTo-Json -Depth 5 | Out-File $configPath -Encoding utf8
 Write-Host "Created $configPath for $( if ($isHttp) {'HTTP'} else {'stdio'} ) server"
 ```
+
+## Logging Configuration
+
+### HTTP Transport
+
+Standard console logging for HTTP MCP servers:
+
+```csharp
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.SetMinimumLevel(
+    builder.Environment.IsDevelopment() ? LogLevel.Debug : LogLevel.Information);
+```
+
+> **Note:** For stdio transport, do NOT use standard console logging — it writes to stdout and corrupts the JSON-RPC protocol. See the main skill guide (Step 6) for stdio-specific logging configuration.

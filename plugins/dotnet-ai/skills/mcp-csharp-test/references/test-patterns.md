@@ -69,7 +69,11 @@ public class MyToolTests : ClientServerTestBase
 
 ## HTTP Testing with WebApplicationFactory
 
-Test HTTP MCP servers using ASP.NET Core's test infrastructure:
+Test HTTP MCP servers using ASP.NET Core's test infrastructure.
+
+**Important:** `WebApplicationFactory<Program>` requires access to the `Program` class. Either:
+- Add `<InternalsVisibleTo Include="YourServer.Tests" />` to the server's `.csproj`, or
+- Make the `Program` class public: `public partial class Program { }`
 
 ```csharp
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -105,6 +109,45 @@ public class HttpServerTests : IClassFixture<WebApplicationFactory<Program>>
     }
 
     [Fact]
+    public async Task McpEndpoint_InvokesTool()
+    {
+        var client = _factory.CreateClient();
+
+        // First initialize the session
+        var init = new
+        {
+            jsonrpc = "2.0",
+            id = 1,
+            method = "initialize",
+            @params = new
+            {
+                protocolVersion = "2024-11-05",
+                capabilities = new { },
+                clientInfo = new { name = "test", version = "1.0" }
+            }
+        };
+        await client.PostAsJsonAsync("/mcp", init);
+
+        // Then call a tool
+        var toolCall = new
+        {
+            jsonrpc = "2.0",
+            id = 2,
+            method = "tools/call",
+            @params = new
+            {
+                name = "echo",
+                arguments = new { message = "hello" }
+            }
+        };
+
+        var response = await client.PostAsJsonAsync("/mcp", toolCall);
+        response.EnsureSuccessStatusCode();
+        var body = await response.Content.ReadAsStringAsync();
+        Assert.Contains("hello", body);
+    }
+
+    [Fact]
     public async Task HealthEndpoint_ReturnsOk()
     {
         var client = _factory.CreateClient();
@@ -112,64 +155,4 @@ public class HttpServerTests : IClassFixture<WebApplicationFactory<Program>>
         response.EnsureSuccessStatusCode();
     }
 }
-```
-
-**Note:** Requires `<InternalsVisibleTo Include="YourTest.Project" />` or a public `Program` class.
-
-## Input Validation Tests
-
-```csharp
-public class ValidationTests
-{
-    [Theory]
-    [InlineData(0)]
-    [InlineData(-1)]
-    [InlineData(101)]
-    public void Search_ClampsInvalidLimit(int invalidLimit)
-    {
-        var result = SearchTools.Search("query", limit: invalidLimit);
-        result.Should().NotBeNull();
-    }
-
-    [Fact]
-    public void Search_HandlesSpecialCharacters()
-    {
-        var result = SearchTools.Search("'; DROP TABLE users; --");
-        result.Should().NotContain("DROP TABLE");
-    }
-}
-```
-
-## Test Categories
-
-Organize tests with traits for selective execution:
-
-```csharp
-[Trait("Category", "Unit")]
-public class UnitTests { ... }
-
-[Trait("Category", "Integration")]
-public class IntegrationTests { ... }
-```
-
-Run by category:
-```bash
-dotnet test --filter "Category=Unit"
-dotnet test --filter "Category=Integration"
-```
-
-## Coverage Reporting
-
-```bash
-# Add coverage collector
-dotnet add package coverlet.collector
-
-# Run with coverage
-dotnet test --collect:"XPlat Code Coverage"
-
-# Generate HTML report
-dotnet tool install --global dotnet-reportgenerator-globaltool
-reportgenerator \
-  -reports:TestResults/**/coverage.cobertura.xml \
-  -targetdir:coveragereport
 ```
