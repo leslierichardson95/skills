@@ -7,7 +7,7 @@
 #
 # Format: one domain per line. Lines starting with # are comments.
 # Entries containing a slash match URLs with that exact prefix followed by
-# '/', '?', '#', or end-of-URL. Entries without a slash match the entire domain.
+# '/', '?', '#', or end-of-URL. Entries without a slash match the domain and all its subdomains.
 
 # Standards
 dot.net
