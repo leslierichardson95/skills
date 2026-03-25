@@ -74,8 +74,6 @@
 
 /plugins/dotnet-diag/agents/optimizing-dotnet-performance.agent.md @dotnet/appmodel
 
-/plugins/dotnet/agents/optimizing-dotnet-performance.agent.md @dotnet/appmodel
-
 /plugins/dotnet-ai/skills/technology-selection/ @luisquintanilla @artl93
 /tests/dotnet-ai/technology-selection/ @luisquintanilla @artl93
 

@@ -95,11 +95,11 @@ HTTP:
 
 ### Step 3: Test with MCP Inspector
 
-The MCP Inspector provides a UI for testing tools, viewing schemas, and inspecting protocol messages.
+The MCP Inspector provides a web UI for testing tools, prompts, and resources, viewing JSON schemas, and inspecting raw JSON-RPC protocol messages.
 
 **stdio server:**
 ```bash
-npx @modelcontextprotocol/inspector dotnet run --project <path/to/ProjectFile.csproj>
+npx @modelcontextprotocol/inspector -- dotnet run --project <path/to/ProjectFile.csproj>
 ```
 
 **HTTP server:**
@@ -107,7 +107,9 @@ npx @modelcontextprotocol/inspector dotnet run --project <path/to/ProjectFile.cs
 2. Run Inspector: `npx @modelcontextprotocol/inspector`
 3. Connect to `http://localhost:3001`
 
-**For detailed Inspector capabilities, usage, and troubleshooting**, see [references/mcp-inspector.md](references/mcp-inspector.md).
+Use the **Tools** tab to list and invoke tools, **Resources** to browse resources, and **Prompts** to test prompts. The message log shows raw JSON-RPC traffic.
+
+**For detailed Inspector usage and troubleshooting**, see [references/mcp-inspector.md](references/mcp-inspector.md).
 
 ### Step 4: Test with GitHub Copilot Agent Mode
 
@@ -149,14 +151,23 @@ npx @modelcontextprotocol/inspector dotnet run --project <path/to/ProjectFile.cs
 When a tool works standalone but fails through MCP, work through these checks:
 
 1. **Check the MCP output channel** — In VS Code: View → Output → select your MCP server name. Shows protocol errors and server stderr. In Visual Studio: check the Output window for MCP-related messages.
-2. **Attach a debugger** — Set a breakpoint in the failing tool method and step through execution (see Step 5). Check for exceptions being swallowed or unexpected parameter values.
-3. **Test with MCP Inspector** — Call the tool directly through Inspector to isolate whether the issue is in the tool code or the client integration: `npx @modelcontextprotocol/inspector dotnet run --project <path>`
-4. **Check stdout contamination (stdio only)** — Any `Console.WriteLine()` or logging to stdout corrupts the JSON-RPC protocol. Redirect all output to stderr (see Step 6).
+2. **Attach a debugger to the running process** — Add `Debugger.Launch()` to the failing tool method to trigger the debugger when the tool is invoked through MCP:
+   ```csharp
+   System.Diagnostics.Debugger.Launch(); // triggers debugger attach dialog
+   ```
+   Alternatively, configure `launch.json` to attach to the running server process, or add `--debug` to the server args in `mcp.json` and handle it with a `Debugger.Launch()` gate in your startup code.
+3. **Test with MCP Inspector** — Call the tool directly through Inspector to isolate whether the issue is in the tool code or the client integration:
+   ```bash
+   npx @modelcontextprotocol/inspector -- dotnet run --project <path>
+   ```
+4. **Check stdout contamination (stdio only)** — MCP uses stdin/stdout for JSON-RPC communication. Any `Console.WriteLine()` or logging to stdout corrupts the protocol. Redirect all output to stderr (see Step 6).
 5. **Check common culprits:**
    - **Serialization errors** — Return types must be JSON-serializable. Avoid circular references.
    - **DI registration** — Missing service registrations cause runtime exceptions. Check `Program.cs`.
-   - **Parameter binding** — Ensure parameter names and types match the tool schema.
-   - **Unhandled exceptions** — Wrap tool logic in try-catch and log to stderr or a file.
+   - **Blocking calls / deadlocks** — `async` handlers that use `.Result` or `.Wait()` can deadlock in the MCP hosting context but work fine in a console app.
+   - **Environment variable differences** — VS Code launches the process with a different env than your terminal. Log `Environment.GetEnvironmentVariables()` to verify.
+   - **Working directory differences** — Relative paths that work in your terminal may fail when VS Code spawns the process.
+   - **Unhandled exceptions** — Wrap tool logic in try-catch and return a proper MCP error response.
 6. **Enable file logging** — For post-mortem analysis, log to a file:
    ```csharp
    builder.Logging.AddFile("mcp-debug.log"); // or use Serilog/NLog
@@ -164,7 +175,7 @@ When a tool works standalone but fails through MCP, work through these checks:
 
 ### Step 6: Configure logging
 
-**Critical for stdio transport:** Any output to stdout (including `Console.WriteLine`) **corrupts the MCP JSON-RPC protocol** and causes garbled responses or crashes. All logging and diagnostic output must go to stderr.
+**Critical for stdio transport:** MCP uses stdin/stdout for JSON-RPC communication. Any output to stdout (including `Console.WriteLine`) **corrupts the protocol** and causes garbled responses or crashes. All logging and diagnostic output must go to stderr.
 
 **stdio transport** — log to stderr only:
 ```csharp
