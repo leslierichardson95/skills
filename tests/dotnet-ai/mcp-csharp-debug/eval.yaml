@@ -44,6 +44,6 @@ scenarios:
     rubric:
       - "Explains that stdout is reserved for MCP protocol in stdio mode"
       - "Recommends checking that all logging goes to stderr"
-      - "Shows how to attach a debugger to the running server process"
-      - "Suggests using MCP Inspector or VS Code debug config for step-through debugging"
+      - "Shows how to further diagnose the issue — such as attaching a debugger to the running process, using Debugger.Launch(), or configuring launch.json to debug the server"
+      - "Suggests using MCP Inspector or VS Code debug config to test or step through the server"
     timeout: 120
